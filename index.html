@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AMLProof – Crypto Wallet Verification</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-<!-- QRCode.js for generating QR codes -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <style>
   :root {
     --bg:#070d1a; --surface:#0d1829; --surface2:#111f35;
@@ -35,14 +32,9 @@
   .nav-links a{color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:600;
     letter-spacing:.05em;text-transform:uppercase;transition:color .2s;}
   .nav-links a:hover{color:var(--accent);}
-
-  .connect-btn{
-    display:flex;align-items:center;gap:8px;
-    background:var(--accent);color:var(--bg);border:none;
-    padding:10px 22px;border-radius:6px;
-    font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;
-    cursor:pointer;transition:all .2s;
-  }
+  .connect-btn{display:flex;align-items:center;gap:8px;background:var(--accent);color:var(--bg);
+    border:none;padding:10px 22px;border-radius:6px;font-family:'Syne',sans-serif;
+    font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;}
   .connect-btn:hover{opacity:.85;box-shadow:0 0 20px rgba(0,229,255,.4);}
   .connect-btn.connected{background:var(--surface2);color:var(--safe);border:1px solid rgba(0,230,118,.3);}
   .live-dot{width:8px;height:8px;border-radius:50%;background:var(--safe);animation:pulse 2s infinite;flex-shrink:0;}
@@ -56,85 +48,88 @@
   #statusBar.show{display:flex;}
   #disconnectBtn{margin-left:auto;background:transparent;border:1px solid rgba(255,61,90,.3);
     color:var(--danger);padding:4px 14px;border-radius:4px;
-    font-family:'Space Mono',monospace;font-size:.7rem;cursor:pointer;transition:all .2s;}
+    font-family:'Space Mono',monospace;font-size:.7rem;cursor:pointer;}
   #disconnectBtn:hover{background:rgba(255,61,90,.1);}
 
-  /* QR MODAL */
-  .modal-overlay{display:none;position:fixed;inset:0;
-    background:rgba(0,0,0,.8);backdrop-filter:blur(10px);
-    z-index:200;align-items:center;justify-content:center;}
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+    backdrop-filter:blur(12px);z-index:200;align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;}
-  .modal-box{background:var(--surface);border:1px solid var(--border);
-    border-radius:20px;padding:36px;max-width:420px;width:90%;
-    text-align:center;position:relative;
-    box-shadow:0 0 60px rgba(0,229,255,.12);}
+  .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    padding:36px;max-width:440px;width:92%;text-align:center;position:relative;
+    box-shadow:0 0 80px rgba(0,229,255,.1);}
   .modal-close{position:absolute;top:14px;right:18px;background:transparent;border:none;
-    color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1;transition:color .2s;}
+    color:var(--muted);font-size:1.5rem;cursor:pointer;line-height:1;}
   .modal-close:hover{color:var(--text);}
-  .modal-logo{font-size:2.5rem;margin-bottom:12px;}
-  .modal-box h3{font-size:1.25rem;font-weight:800;margin-bottom:6px;}
-  .modal-box .modal-sub{color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:24px;}
 
-  /* QR container */
-  #qrWrap{
-    background:#fff;border-radius:12px;
-    padding:16px;display:inline-block;
-    margin-bottom:20px;
-  }
-  #qrWrap canvas,#qrWrap img{display:block;}
+  /* Modal states */
+  .m-state{display:none;}
+  .m-state.active{display:block;}
 
-  .modal-steps{text-align:left;margin-bottom:20px;}
-  .modal-step{display:flex;align-items:flex-start;gap:10px;
-    font-size:.82rem;color:var(--muted);margin-bottom:8px;line-height:1.4;}
-  .modal-step-num{background:rgba(0,229,255,.1);color:var(--accent);
-    border-radius:50%;width:20px;height:20px;display:flex;align-items:center;
-    justify-content:center;font-family:'Space Mono',monospace;font-size:.7rem;
-    font-weight:700;flex-shrink:0;margin-top:1px;}
-
-  .uri-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
-  .uri-box{flex:1;background:var(--bg);border:1px solid var(--border);
-    border-radius:6px;padding:8px 12px;
-    font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);
-    word-break:break-all;text-align:left;max-height:48px;overflow:hidden;line-height:1.4;}
-  .copy-btn{background:transparent;border:1px solid var(--border);color:var(--muted);
-    padding:8px 12px;border-radius:6px;font-family:'Space Mono',monospace;
-    font-size:.7rem;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
-  .copy-btn:hover{border-color:var(--accent);color:var(--accent);}
-
-  .modal-footer{font-size:.75rem;color:var(--muted);}
-  .modal-footer span{color:var(--accent);}
-
-  /* Loading spinner inside modal */
-  .modal-loading{display:flex;flex-direction:column;align-items:center;
-    justify-content:center;padding:40px 0;gap:16px;color:var(--muted);
-    font-family:'Space Mono',monospace;font-size:.8rem;}
-  .spinner{width:36px;height:36px;border-radius:50%;
-    border:3px solid var(--border);border-top-color:var(--accent);
-    animation:spin .8s linear infinite;}
+  /* Loading */
+  #m-loading{text-align:center;padding:40px 0;}
+  .spinner{width:44px;height:44px;border-radius:50%;border:3px solid var(--border);
+    border-top-color:var(--accent);animation:spin .8s linear infinite;margin:0 auto 16px;}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{color:var(--muted);font-family:'Space Mono',monospace;font-size:.8rem;}
 
-  /* Connected state in modal */
-  .modal-connected{display:none;flex-direction:column;align-items:center;
-    padding:20px 0;gap:12px;}
-  .modal-connected .tick{font-size:3rem;}
-  .modal-connected h3{color:var(--safe);}
-  .modal-connected p{color:var(--muted);font-size:.85rem;}
+  /* QR */
+  #m-qr h3{font-size:1.2rem;font-weight:800;margin-bottom:6px;}
+  #m-qr .sub{color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:20px;}
+  #m-qr .sub strong{color:var(--text);}
+  #qrWrap{background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:18px;}
+  #qrcode canvas,#qrcode img{display:block;}
+  .steps-list{text-align:left;margin-bottom:18px;}
+  .step-row{display:flex;align-items:flex-start;gap:10px;
+    font-size:.8rem;color:var(--muted);margin-bottom:8px;line-height:1.5;}
+  .step-n{background:rgba(0,229,255,.1);color:var(--accent);border-radius:50%;
+    width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+    font-family:'Space Mono',monospace;font-size:.68rem;font-weight:700;flex-shrink:0;margin-top:1px;}
+  .uri-row{display:flex;gap:8px;margin-bottom:14px;}
+  .uri-box{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;
+    padding:8px 10px;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);
+    word-break:break-all;text-align:left;max-height:44px;overflow:hidden;line-height:1.4;}
+  .copy-btn{background:transparent;border:1px solid var(--border);color:var(--muted);
+    padding:8px 12px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.7rem;
+    cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+  .copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .compat-note{font-size:.73rem;color:var(--muted);}
+  .compat-note span{color:var(--accent);}
+
+  /* Connected */
+  #m-connected{padding:20px 0;}
+  .tick-icon{font-size:3.5rem;margin-bottom:12px;}
+  #m-connected h3{color:var(--safe);font-size:1.2rem;margin-bottom:6px;}
+  #m-connected p{color:var(--muted);font-size:.85rem;}
+
+  /* Error */
+  #m-error{padding:20px 0;}
+  .err-icon{font-size:3rem;margin-bottom:12px;}
+  #m-error h3{color:var(--danger);font-size:1.1rem;margin-bottom:10px;}
+  #m-error p{color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px;}
+  .err-steps{background:rgba(255,61,90,.06);border:1px solid rgba(255,61,90,.2);
+    border-radius:10px;padding:16px;text-align:left;margin-bottom:18px;}
+  .err-steps p{color:var(--text);font-size:.8rem;font-weight:700;margin-bottom:8px;}
+  .err-steps ol{padding-left:18px;color:var(--muted);font-size:.78rem;line-height:1.8;}
+  .err-steps ol li strong{color:var(--accent);}
+  .err-steps code{background:rgba(0,229,255,.1);color:var(--accent);
+    padding:1px 6px;border-radius:3px;font-family:'Space Mono',monospace;font-size:.75rem;}
+  .retry-btn{background:var(--accent);color:var(--bg);border:none;padding:12px 28px;
+    border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;}
 
   /* HERO */
   .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;
     padding:140px 60px 80px;position:relative;overflow:hidden;}
-  .hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);
-    width:700px;height:400px;background:radial-gradient(ellipse,rgba(0,229,255,.08) 0%,transparent 70%);pointer-events:none;}
+  .hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);width:700px;height:400px;
+    background:radial-gradient(ellipse,rgba(0,229,255,.08) 0%,transparent 70%);pointer-events:none;}
   .hero-glow2{position:absolute;bottom:10%;right:5%;width:400px;height:300px;
     background:radial-gradient(ellipse,rgba(123,92,255,.1) 0%,transparent 70%);pointer-events:none;}
   .hero-inner{max-width:1200px;width:100%;display:grid;grid-template-columns:1fr 1fr;
     gap:80px;align-items:center;position:relative;z-index:1;}
-  .hero-badge{display:inline-flex;align-items:center;gap:8px;
-    background:rgba(0,229,255,.08);border:1px solid var(--border);
-    border-radius:100px;padding:6px 16px;font-family:'Space Mono',monospace;
-    font-size:.75rem;color:var(--accent);margin-bottom:28px;}
-  .hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;
-    background:var(--accent);animation:pulse 2s infinite;}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,255,.08);
+    border:1px solid var(--border);border-radius:100px;padding:6px 16px;
+    font-family:'Space Mono',monospace;font-size:.75rem;color:var(--accent);margin-bottom:28px;}
+  .hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
   .hero h1{font-size:3.2rem;font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:24px;}
   .hero h1 .accent{color:var(--accent);}
   .hero p{font-size:1.05rem;color:var(--muted);line-height:1.7;margin-bottom:40px;max-width:480px;}
@@ -147,38 +142,37 @@
   @keyframes shimmer{to{left:200%;}}
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
   .scan-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .scan-label{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+  .scan-lbl{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
   .risk-badge{padding:4px 12px;border-radius:100px;font-family:'Space Mono',monospace;font-size:.7rem;font-weight:700;}
   .risk-low{background:rgba(0,230,118,.15);color:var(--safe);border:1px solid rgba(0,230,118,.3);}
   .risk-high{background:rgba(255,61,90,.15);color:var(--danger);border:1px solid rgba(255,61,90,.3);}
   .risk-med{background:rgba(255,179,0,.15);color:var(--warn);border:1px solid rgba(255,179,0,.3);}
-  .wallet-addr-box{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--accent);
+  .waddr{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--accent);
     background:rgba(0,229,255,.05);padding:10px 14px;border-radius:6px;
     margin-bottom:16px;word-break:break-all;border:1px solid var(--border);}
-  .risk-bar-wrap{margin-bottom:6px;}
-  .risk-bar-label{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);
+  .rbar-wrap{margin-bottom:6px;}
+  .rbar-lbl{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);
     margin-bottom:6px;font-family:'Space Mono',monospace;}
-  .risk-bar{height:6px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;}
-  .risk-fill{height:100%;border-radius:100px;}
-  .fill-safe{background:linear-gradient(90deg,var(--safe),#00c853);width:8%;}
-  .fill-med{background:linear-gradient(90deg,var(--warn),#ff6f00);width:45%;}
-  .fill-danger{background:linear-gradient(90deg,var(--danger),#c62828);width:87%;}
+  .rbar{height:6px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden;}
+  .rfill{height:100%;border-radius:100px;}
+  .f-safe{background:linear-gradient(90deg,var(--safe),#00c853);width:8%;}
+  .f-med{background:linear-gradient(90deg,var(--warn),#ff6f00);width:45%;}
+  .f-danger{background:linear-gradient(90deg,var(--danger),#c62828);width:87%;}
   .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;}
-  .stat-item{background:var(--surface2);border-radius:8px;padding:12px;text-align:center;}
-  .stat-num{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);}
-  .stat-lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+  .sitem{background:var(--surface2);border-radius:8px;padding:12px;text-align:center;}
+  .snum{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);}
+  .slbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
 
   .trust-bar{padding:20px 60px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
     display:flex;align-items:center;justify-content:center;gap:60px;background:var(--surface);flex-wrap:wrap;}
   .trust-item{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.85rem;font-weight:600;}
 
   section{padding:100px 60px;max-width:1200px;margin:0 auto;position:relative;z-index:1;}
-  .section-label{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.2em;
-    text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
+  .slabel{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
   h2{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;margin-bottom:20px;line-height:1.15;}
-  .section-sub{font-size:1rem;color:var(--muted);line-height:1.7;max-width:560px;margin-bottom:60px;}
+  .ssub{font-size:1rem;color:var(--muted);line-height:1.7;max-width:560px;margin-bottom:60px;}
 
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
   .step-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
     padding:32px;transition:border-color .3s,transform .3s;}
   .step-card:hover{border-color:rgba(0,229,255,.3);transform:translateY(-4px);}
@@ -191,11 +185,11 @@
   .checker-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;max-width:760px;}
   .checker-wrap h3{font-size:1.4rem;font-weight:700;margin-bottom:8px;}
   .checker-wrap>p{color:var(--muted);font-size:.9rem;margin-bottom:24px;}
-  .connect-cta{display:flex;align-items:center;gap:16px;background:rgba(0,229,255,.05);
+  .ccta{display:flex;align-items:center;gap:16px;background:rgba(0,229,255,.05);
     border:1px dashed rgba(0,229,255,.2);border-radius:10px;padding:20px;margin-bottom:20px;flex-wrap:wrap;}
-  .connect-cta-icon{font-size:2rem;}
-  .connect-cta-text h4{font-size:.95rem;font-weight:700;margin-bottom:4px;}
-  .connect-cta-text p{font-size:.82rem;color:var(--muted);}
+  .ccta-icon{font-size:2rem;}
+  .ccta-text h4{font-size:.95rem;font-weight:700;margin-bottom:4px;}
+  .ccta-text p{font-size:.82rem;color:var(--muted);}
   .input-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
   .wallet-input{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);
     color:var(--text);padding:14px 18px;border-radius:6px;
@@ -208,54 +202,54 @@
   .check-btn{background:var(--accent);color:var(--bg);border:none;padding:14px 28px;
     border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s;}
   .check-btn:hover{box-shadow:0 0 20px rgba(0,229,255,.4);transform:translateY(-1px);}
-  .checker-result{display:none;background:var(--bg);border:1px solid var(--border);
+  .chk-result{display:none;background:var(--bg);border:1px solid var(--border);
     border-radius:10px;padding:20px;margin-top:16px;}
-  .checker-result.visible{display:block;}
+  .chk-result.visible{display:block;}
 
   .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
   .price-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
     padding:32px;text-align:center;transition:all .3s;position:relative;}
   .price-card.featured{border-color:var(--accent);background:var(--surface2);box-shadow:var(--glow);}
-  .featured-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+  .ftd-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);
     background:var(--accent);color:var(--bg);font-family:'Space Mono',monospace;font-size:.65rem;
     font-weight:700;letter-spacing:.1em;padding:4px 14px;border-radius:100px;text-transform:uppercase;}
-  .price-val{font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;color:var(--accent);}
-  .price-unit{font-size:.85rem;color:var(--muted);margin-bottom:28px;}
-  .price-features{list-style:none;text-align:left;margin-bottom:28px;}
-  .price-features li{display:flex;align-items:center;gap:10px;font-size:.88rem;color:var(--muted);
+  .pval{font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;color:var(--accent);}
+  .punit{font-size:.85rem;color:var(--muted);margin-bottom:28px;}
+  .pfeat{list-style:none;text-align:left;margin-bottom:28px;}
+  .pfeat li{display:flex;align-items:center;gap:10px;font-size:.88rem;color:var(--muted);
     padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
-  .price-features li::before{content:'✓';color:var(--safe);font-weight:700;font-size:.8rem;flex-shrink:0;}
+  .pfeat li::before{content:'✓';color:var(--safe);font-weight:700;font-size:.8rem;flex-shrink:0;}
   .btn-card{display:block;width:100%;padding:13px;border-radius:6px;font-weight:700;font-size:.9rem;
     text-align:center;cursor:pointer;text-decoration:none;transition:all .2s;border:none;font-family:'Syne',sans-serif;}
-  .btn-card-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
-  .btn-card-outline:hover{border-color:var(--accent);color:var(--accent);}
-  .btn-card-primary{background:var(--accent);color:var(--bg);}
+  .btn-ol{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .btn-ol:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-pr{background:var(--accent);color:var(--bg);}
 
-  .categories-wrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .cats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
   .cat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;transition:all .3s;}
   .cat-card:hover{border-color:rgba(255,61,90,.3);transform:translateY(-2px);}
-  .cat-card.suspicious:hover{border-color:rgba(255,179,0,.3);}
-  .cat-card.trusted:hover{border-color:rgba(0,230,118,.3);}
-  .cat-dot{width:8px;height:8px;border-radius:50%;margin-bottom:12px;}
-  .dot-danger{background:var(--danger);box-shadow:0 0 8px var(--danger);}
-  .dot-warn{background:var(--warn);box-shadow:0 0 8px var(--warn);}
-  .dot-safe{background:var(--safe);box-shadow:0 0 8px var(--safe);}
-  .cat-title{font-size:.88rem;font-weight:700;margin-bottom:6px;}
-  .cat-desc{font-size:.78rem;color:var(--muted);line-height:1.5;}
+  .cat-card.susp:hover{border-color:rgba(255,179,0,.3);}
+  .cat-card.trust:hover{border-color:rgba(0,230,118,.3);}
+  .cdot{width:8px;height:8px;border-radius:50%;margin-bottom:12px;}
+  .cd{background:var(--danger);box-shadow:0 0 8px var(--danger);}
+  .cw{background:var(--warn);box-shadow:0 0 8px var(--warn);}
+  .cs{background:var(--safe);box-shadow:0 0 8px var(--safe);}
+  .ctit{font-size:.88rem;font-weight:700;margin-bottom:6px;}
+  .cdesc{font-size:.78rem;color:var(--muted);line-height:1.5;}
 
-  .stats-section{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:80px 60px;}
-  .stats-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);
+  .stats-sec{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:80px 60px;}
+  .stats-in{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);
     gap:1px;background:var(--border);border-radius:12px;overflow:hidden;}
-  .stat-block{background:var(--surface);padding:40px;text-align:center;}
+  .stat-bl{background:var(--surface);padding:40px;text-align:center;}
   .stat-big{font-family:'Space Mono',monospace;font-size:2.8rem;font-weight:700;color:var(--accent);line-height:1;margin-bottom:8px;}
-  .stat-desc{font-size:.9rem;color:var(--muted);line-height:1.5;}
+  .stat-d{font-size:.9rem;color:var(--muted);line-height:1.5;}
 
   .faq-list{display:flex;flex-direction:column;gap:12px;}
   .faq-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
   .faq-q{padding:20px 24px;display:flex;justify-content:space-between;align-items:center;
     cursor:pointer;font-weight:600;font-size:.95rem;transition:color .2s;}
   .faq-q:hover{color:var(--accent);}
-  .faq-q .arrow{font-size:1rem;transition:transform .3s;color:var(--muted);}
+  .arrow{font-size:1rem;transition:transform .3s;color:var(--muted);}
   .faq-a{padding:0 24px;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s;
     color:var(--muted);font-size:.9rem;line-height:1.7;}
   .faq-item.open .faq-a{max-height:300px;padding:0 24px 20px;}
@@ -263,68 +257,85 @@
   .faq-item.open .faq-q{color:var(--accent);}
 
   footer{background:var(--surface);border-top:1px solid var(--border);padding:60px;}
-  .footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:60px;margin-bottom:50px;}
-  .footer-brand p{color:var(--muted);font-size:.88rem;line-height:1.7;margin:16px 0;max-width:280px;}
-  .footer-h{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;}
-  .footer-links{list-style:none;display:flex;flex-direction:column;gap:12px;}
-  .footer-links a{color:var(--muted);text-decoration:none;font-size:.88rem;transition:color .2s;}
-  .footer-links a:hover{color:var(--text);}
-  .footer-bottom{max-width:1200px;margin:0 auto;padding-top:30px;border-top:1px solid var(--border);
+  .footer-in{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:60px;margin-bottom:50px;}
+  .fbrand p{color:var(--muted);font-size:.88rem;line-height:1.7;margin:16px 0;max-width:280px;}
+  .fh{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;}
+  .flinks{list-style:none;display:flex;flex-direction:column;gap:12px;}
+  .flinks a{color:var(--muted);text-decoration:none;font-size:.88rem;transition:color .2s;}
+  .flinks a:hover{color:var(--text);}
+  .fbot{max-width:1200px;margin:0 auto;padding-top:30px;border-top:1px solid var(--border);
     display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.82rem;}
 
   @media(max-width:900px){
-    nav{padding:16px 20px;} .nav-links{display:none;}
-    .hero{padding:100px 20px 60px;} .hero-inner{grid-template-columns:1fr;gap:40px;}
-    section{padding:60px 20px;} .steps,.pricing-grid{grid-template-columns:1fr;}
-    .categories-wrap{grid-template-columns:1fr 1fr;} .stats-inner{grid-template-columns:1fr;}
-    .footer-inner{grid-template-columns:1fr 1fr;gap:40px;} h2{font-size:1.8rem;}
-    .hero h1{font-size:2.2rem;} .trust-bar{gap:20px;padding:20px;}
-    .footer-bottom{flex-direction:column;gap:12px;text-align:center;}
-    #statusBar{padding:10px 20px;}
+    nav{padding:16px 20px;}.nav-links{display:none;}
+    .hero{padding:100px 20px 60px;}.hero-inner{grid-template-columns:1fr;gap:40px;}
+    section{padding:60px 20px;}.steps-grid,.pricing-grid{grid-template-columns:1fr;}
+    .cats-grid{grid-template-columns:1fr 1fr;}.stats-in{grid-template-columns:1fr;}
+    .footer-in{grid-template-columns:1fr 1fr;gap:40px;}h2{font-size:1.8rem;}
+    .hero h1{font-size:2.2rem;}.trust-bar{gap:20px;padding:20px;}
+    .fbot{flex-direction:column;gap:12px;text-align:center;}#statusBar{padding:10px 20px;}
   }
 </style>
 </head>
 <body>
 
-<!-- QR MODAL -->
-<div class="modal-overlay" id="wcModal" onclick="handleOverlayClick(event)">
+<!-- ═══ QR MODAL ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="wcModal" onclick="bgClick(event)">
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal()">✕</button>
 
-    <!-- Loading state -->
-    <div id="modalLoading" class="modal-loading">
+    <!-- LOADING -->
+    <div id="m-loading" class="m-state active">
       <div class="spinner"></div>
-      <div>Generating QR Code…</div>
+      <div class="loading-text">Connecting to WalletConnect relay…</div>
     </div>
 
-    <!-- QR state -->
-    <div id="modalQR" style="display:none">
-      <div class="modal-logo">📱</div>
+    <!-- QR CODE -->
+    <div id="m-qr" class="m-state">
+      <div style="font-size:2.2rem;margin-bottom:10px">📱</div>
       <h3>Scan with Trust Wallet</h3>
-      <p class="modal-sub">Open <strong style="color:var(--text)">Trust Wallet</strong> → tap the <strong style="color:var(--text)">WalletConnect</strong> icon → scan this QR code</p>
+      <p class="sub">Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan below</p>
       <div id="qrWrap"><div id="qrcode"></div></div>
-      <div class="modal-steps">
-        <div class="modal-step"><span class="modal-step-num">1</span><span>Open Trust Wallet on your phone</span></div>
-        <div class="modal-step"><span class="modal-step-num">2</span><span>Tap Settings → WalletConnect <em>or</em> tap the scan icon in the top-right</span></div>
-        <div class="modal-step"><span class="modal-step-num">3</span><span>Scan the QR code above and approve the connection</span></div>
+      <div class="steps-list">
+        <div class="step-row"><span class="step-n">1</span><span>Open <strong style="color:var(--text)">Trust Wallet</strong> on your phone</span></div>
+        <div class="step-row"><span class="step-n">2</span><span>Tap the <strong style="color:var(--text)">⊞ scan icon</strong> in the top-right corner</span></div>
+        <div class="step-row"><span class="step-n">3</span><span>Scan the QR above and tap <strong style="color:var(--text)">Connect</strong></span></div>
       </div>
       <div class="uri-row">
-        <div class="uri-box" id="uriBox"></div>
-        <button class="copy-btn" onclick="copyURI()">📋 Copy</button>
+        <div class="uri-box" id="uriBox">—</div>
+        <button class="copy-btn" id="copyBtn" onclick="copyURI()">📋 Copy</button>
       </div>
-      <div class="modal-footer">Compatible with <span>Trust Wallet</span>, MetaMask & all WalletConnect wallets</div>
+      <div class="compat-note">Works with <span>Trust Wallet</span>, MetaMask Mobile & all WalletConnect wallets</div>
     </div>
 
-    <!-- Connected state -->
-    <div id="modalConnected" class="modal-connected">
-      <div class="tick">✅</div>
-      <h3 style="color:var(--safe)">Wallet Connected!</h3>
-      <p id="modalConnectedAddr"></p>
+    <!-- CONNECTED -->
+    <div id="m-connected" class="m-state" style="padding:24px 0">
+      <div class="tick-icon">✅</div>
+      <h3 style="color:var(--safe);margin-bottom:8px">Wallet Connected!</h3>
+      <p id="m-conn-addr" style="color:var(--muted);font-size:.88rem"></p>
+    </div>
+
+    <!-- ERROR -->
+    <div id="m-error" class="m-state" style="padding:16px 0">
+      <div class="err-icon">⚠️</div>
+      <h3 style="color:var(--warn)">Connection Failed</h3>
+      <p id="m-err-msg" style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:16px"></p>
+      <div class="err-steps">
+        <p>🔧 Fix in Reown Dashboard:</p>
+        <ol>
+          <li>Go to <strong><a href="https://dashboard.reown.com" target="_blank" style="color:var(--accent)">dashboard.reown.com</a></strong></li>
+          <li>Open your project → <strong>Settings</strong></li>
+          <li>Under <strong>Allowed Domains</strong>, add: <code>dapp1985.github.io</code></li>
+          <li>Also add: <code>localhost</code> (for testing)</li>
+          <li>Save changes and refresh this page</li>
+        </ol>
+      </div>
+      <button class="retry-btn" onclick="retryConnect()">↺ Try Again</button>
     </div>
   </div>
 </div>
 
-<!-- NAV -->
+<!-- ═══ NAV ═══════════════════════════════════════════════ -->
 <nav>
   <a href="#" class="nav-logo">🔍 <span>AMLProof</span></a>
   <ul class="nav-links">
@@ -333,7 +344,7 @@
     <li><a href="#categories">Analysis</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#faq">FAQ</a></li>
-    <li><button id="navConnectBtn" class="connect-btn" onclick="openModal()">🔗 Connect Wallet</button></li>
+    <li><button id="navBtn" class="connect-btn" onclick="openModal()">🔗 Connect Wallet</button></li>
   </ul>
 </nav>
 
@@ -341,13 +352,13 @@
 <div id="statusBar">
   <span class="live-dot"></span>
   <span>Connected:</span>
-  <span style="color:var(--accent)" id="connectedAddr">—</span>
+  <span style="color:var(--accent)" id="connAddr">—</span>
   <span style="color:var(--muted)">|</span>
-  <span style="color:var(--muted)" id="connectedChain">Ethereum</span>
+  <span style="color:var(--muted)" id="connChain">Ethereum</span>
   <button id="disconnectBtn" onclick="disconnectWallet()">Disconnect</button>
 </div>
 
-<!-- HERO -->
+<!-- ═══ HERO ═══════════════════════════════════════════════ -->
 <div class="hero">
   <div class="hero-glow"></div><div class="hero-glow2"></div>
   <div class="hero-inner">
@@ -359,24 +370,15 @@
     </div>
     <div class="hero-visual">
       <div class="scan-card">
-        <div class="scan-header"><span class="scan-label">// Wallet Scan Result</span><span class="risk-badge risk-high">HIGH RISK</span></div>
-        <div class="wallet-addr-box">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</div>
-        <div class="risk-bar-wrap">
-          <div class="risk-bar-label"><span>Sanctions Risk</span><span>87%</span></div>
-          <div class="risk-bar"><div class="risk-fill fill-danger"></div></div>
-        </div>
-        <div class="risk-bar-wrap">
-          <div class="risk-bar-label"><span>Dark Market Exposure</span><span>45%</span></div>
-          <div class="risk-bar"><div class="risk-fill fill-med"></div></div>
-        </div>
-        <div class="risk-bar-wrap">
-          <div class="risk-bar-label"><span>Clean Sources</span><span>8%</span></div>
-          <div class="risk-bar"><div class="risk-fill fill-safe"></div></div>
-        </div>
+        <div class="scan-header"><span class="scan-lbl">// Wallet Scan Result</span><span class="risk-badge risk-high">HIGH RISK</span></div>
+        <div class="waddr">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</div>
+        <div class="rbar-wrap"><div class="rbar-lbl"><span>Sanctions Risk</span><span>87%</span></div><div class="rbar"><div class="rfill f-danger"></div></div></div>
+        <div class="rbar-wrap"><div class="rbar-lbl"><span>Dark Market Exposure</span><span>45%</span></div><div class="rbar"><div class="rfill f-med"></div></div></div>
+        <div class="rbar-wrap"><div class="rbar-lbl"><span>Clean Sources</span><span>8%</span></div><div class="rbar"><div class="rfill f-safe"></div></div></div>
         <div class="stat-row">
-          <div class="stat-item"><div class="stat-num">142</div><div class="stat-lbl">Txns</div></div>
-          <div class="stat-item"><div class="stat-num" style="color:var(--danger)">3</div><div class="stat-lbl">Flags</div></div>
-          <div class="stat-item"><div class="stat-num" style="color:var(--warn)">ETH</div><div class="stat-lbl">Chain</div></div>
+          <div class="sitem"><div class="snum">142</div><div class="slbl">Txns</div></div>
+          <div class="sitem"><div class="snum" style="color:var(--danger)">3</div><div class="slbl">Flags</div></div>
+          <div class="sitem"><div class="snum" style="color:var(--warn)">ETH</div><div class="slbl">Chain</div></div>
         </div>
       </div>
     </div>
@@ -392,25 +394,25 @@
 </div>
 
 <section id="how">
-  <div class="section-label">// Protocol</div>
+  <div class="slabel">// Protocol</div>
   <h2>What's the task at hand?</h2>
-  <p class="section-sub">Stay safe from scammers by verifying crypto addresses against global AML risk databases.</p>
-  <div class="steps">
-    <div class="step-card"><div class="step-num">01</div><div class="step-icon">📱</div><h3>Connect Trust Wallet</h3><p>Click "Connect Wallet" — a QR code modal opens. Open Trust Wallet → WalletConnect → scan it.</p></div>
-    <div class="step-card"><div class="step-num">02</div><div class="step-icon">🔍</div><h3>Sanctions Screening</h3><p>Your connected address is automatically checked against OFAC, UN, EU and national sanctions lists.</p></div>
+  <p class="ssub">Stay safe from scammers by verifying crypto addresses against global AML risk databases.</p>
+  <div class="steps-grid">
+    <div class="step-card"><div class="step-num">01</div><div class="step-icon">📱</div><h3>Connect Trust Wallet</h3><p>Click "Connect Wallet" — a QR code appears. Open Trust Wallet → tap scan icon → scan it.</p></div>
+    <div class="step-card"><div class="step-num">02</div><div class="step-icon">🔍</div><h3>Sanctions Screening</h3><p>Your address is automatically checked against OFAC, UN, EU and national sanctions lists.</p></div>
     <div class="step-card"><div class="step-num">03</div><div class="step-icon">📊</div><h3>Instant Risk Report</h3><p>Receive a detailed AML risk score and downloadable compliance certificate within seconds.</p></div>
   </div>
 </section>
 
 <section id="check" style="padding-top:0">
-  <div class="section-label">// Live Check</div>
+  <div class="slabel">// Live Check</div>
   <h2>Check a wallet now</h2>
   <div class="checker-wrap">
     <h3>Wallet Address Verification</h3>
     <p>Connect your Trust Wallet — your address auto-fills. Or enter any address manually.</p>
-    <div class="connect-cta" id="connectCta">
-      <div class="connect-cta-icon">📱</div>
-      <div class="connect-cta-text"><h4>Connect via Trust Wallet</h4><p>Scan QR code → address auto-fills below</p></div>
+    <div class="ccta" id="ccta">
+      <div class="ccta-icon">📱</div>
+      <div class="ccta-text"><h4>Connect via Trust Wallet</h4><p>Scan QR → address auto-fills below</p></div>
       <button class="connect-btn" style="margin-left:auto" onclick="openModal()">Connect Now</button>
     </div>
     <div class="input-row">
@@ -420,347 +422,329 @@
     <div class="input-row" style="margin-bottom:0">
       <button class="check-btn" onclick="runCheck()">🔍 Analyze Wallet</button>
     </div>
-    <div class="checker-result" id="checkerResult">
+    <div class="chk-result" id="chkResult">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <span style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted)">SCAN COMPLETE</span>
-        <span class="risk-badge" id="resultBadge">CLEAN</span>
+        <span class="risk-badge" id="resBadge">CLEAN</span>
       </div>
-      <div class="wallet-addr-box" id="resultAddr"></div>
-      <p style="color:var(--muted);font-size:.82rem;margin-top:8px" id="resultMsg"></p>
+      <div class="waddr" id="resAddr"></div>
+      <p style="color:var(--muted);font-size:.82rem;margin-top:8px" id="resMsg"></p>
     </div>
   </div>
 </section>
 
 <section id="categories" style="padding-top:0">
-  <div class="section-label">// Risk Categories</div>
+  <div class="slabel">// Risk Categories</div>
   <h2>What we screen for</h2>
-  <p class="section-sub">Our system categorizes risk across three levels for complete visibility into any wallet's history.</p>
+  <p class="ssub">Our system categorizes risk across three levels for complete visibility into any wallet's history.</p>
   <div style="margin-bottom:32px">
     <div style="font-size:1rem;font-weight:700;color:var(--danger);margin-bottom:16px">⚠ Danger — Illicit Sources</div>
-    <div class="categories-wrap">
-      <div class="cat-card"><div class="cat-dot dot-danger"></div><div class="cat-title">Child Exploitation</div><div class="cat-desc">Entities associated with child exploitation activities</div></div>
-      <div class="cat-card"><div class="cat-dot dot-danger"></div><div class="cat-title">Dark Market</div><div class="cat-desc">Coins associated with illegal darknet marketplace activities</div></div>
-      <div class="cat-card"><div class="cat-dot dot-danger"></div><div class="cat-title">Terrorism Financing</div><div class="cat-desc">Entities on global terrorism financing watchlists</div></div>
-      <div class="cat-card"><div class="cat-dot dot-danger"></div><div class="cat-title">Stolen Coins</div><div class="cat-desc">Cryptocurrency obtained through hacks or theft events</div></div>
-      <div class="cat-card"><div class="cat-dot dot-danger"></div><div class="cat-title">Dark Service</div><div class="cat-desc">Coins related to illegal service providers and abuse networks</div></div>
-      <div class="cat-card"><div class="cat-dot dot-danger"></div><div class="cat-title">Scam</div><div class="cat-desc">Coins obtained by deception, fraud, or phishing attacks</div></div>
+    <div class="cats-grid">
+      <div class="cat-card"><div class="cdot cd"></div><div class="ctit">Child Exploitation</div><div class="cdesc">Entities associated with child exploitation activities</div></div>
+      <div class="cat-card"><div class="cdot cd"></div><div class="ctit">Dark Market</div><div class="cdesc">Coins associated with illegal darknet marketplace activities</div></div>
+      <div class="cat-card"><div class="cdot cd"></div><div class="ctit">Terrorism Financing</div><div class="cdesc">Entities on global terrorism financing watchlists</div></div>
+      <div class="cat-card"><div class="cdot cd"></div><div class="ctit">Stolen Coins</div><div class="cdesc">Cryptocurrency obtained through hacks or theft events</div></div>
+      <div class="cat-card"><div class="cdot cd"></div><div class="ctit">Dark Service</div><div class="cdesc">Coins related to illegal service providers and abuse networks</div></div>
+      <div class="cat-card"><div class="cdot cd"></div><div class="ctit">Scam</div><div class="cdesc">Coins obtained by deception, fraud, or phishing attacks</div></div>
     </div>
   </div>
   <div style="margin-bottom:32px">
     <div style="font-size:1rem;font-weight:700;color:var(--warn);margin-bottom:16px">◈ Suspicious Sources</div>
-    <div class="categories-wrap">
-      <div class="cat-card suspicious"><div class="cat-dot dot-warn"></div><div class="cat-title">Unnamed Service</div><div class="cat-desc">Unidentified clusters showing service-like behavior</div></div>
-      <div class="cat-card suspicious"><div class="cat-dot dot-warn"></div><div class="cat-title">ATM</div><div class="cat-desc">Coins obtained via cryptocurrency ATM operators</div></div>
-      <div class="cat-card suspicious"><div class="cat-dot dot-warn"></div><div class="cat-title">Liquidity Pools</div><div class="cat-desc">Smart contracts with tokens locked for liquidity</div></div>
-      <div class="cat-card suspicious"><div class="cat-dot dot-warn"></div><div class="cat-title">High Risk Exchange</div><div class="cat-desc">No KYC exchanges with criminal ties or sanctions exposure</div></div>
+    <div class="cats-grid">
+      <div class="cat-card susp"><div class="cdot cw"></div><div class="ctit">Unnamed Service</div><div class="cdesc">Unidentified clusters showing service-like behavior</div></div>
+      <div class="cat-card susp"><div class="cdot cw"></div><div class="ctit">ATM</div><div class="cdesc">Coins obtained via cryptocurrency ATM operators</div></div>
+      <div class="cat-card susp"><div class="cdot cw"></div><div class="ctit">Liquidity Pools</div><div class="cdesc">Smart contracts with tokens locked for liquidity</div></div>
+      <div class="cat-card susp"><div class="cdot cw"></div><div class="ctit">High Risk Exchange</div><div class="cdesc">No KYC exchanges with criminal ties or sanctions exposure</div></div>
     </div>
   </div>
   <div>
     <div style="font-size:1rem;font-weight:700;color:var(--safe);margin-bottom:16px">✓ Trusted Sources</div>
-    <div class="categories-wrap">
-      <div class="cat-card trusted"><div class="cat-dot dot-safe"></div><div class="cat-title">Marketplace</div><div class="cat-desc">Coins used to pay for legal goods and services</div></div>
+    <div class="cats-grid">
+      <div class="cat-card trust"><div class="cdot cs"></div><div class="ctit">Marketplace</div><div class="cdesc">Coins used to pay for legal goods and services</div></div>
     </div>
   </div>
 </section>
 
 <section id="pricing">
-  <div class="section-label">// Pricing</div>
+  <div class="slabel">// Pricing</div>
   <h2>Keep your peace of mind<br>for little money</h2>
-  <p class="section-sub">Affordable AML screening to protect your business from hidden risks.</p>
+  <p class="ssub">Affordable AML screening to protect your business from hidden risks.</p>
   <div class="pricing-grid">
-    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🔷</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div><div class="price-val">0.0002 ETH</div><div class="price-unit">per wallet check</div><ul class="price-features"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li></ul><button class="btn-card btn-card-outline" onclick="openModal()">Check with ETH</button></div>
-    <div class="price-card featured"><div class="featured-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="price-val">30 TRX</div><div class="price-unit">per check — Fast</div><ul class="price-features"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-card-primary" onclick="openModal()">Check with TRX</button></div>
-    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🟡</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div><div class="price-val">Custom</div><div class="price-unit">for business clients</div><ul class="price-features"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul><a href="#" class="btn-card btn-card-outline">Contact Sales</a></div>
+    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🔷</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div><div class="pval">0.0002 ETH</div><div class="punit">per wallet check</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li></ul><button class="btn-card btn-ol" onclick="openModal()">Check with ETH</button></div>
+    <div class="price-card featured"><div class="ftd-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="pval">30 TRX</div><div class="punit">per check — Fast</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-pr" onclick="openModal()">Check with TRX</button></div>
+    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🟡</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div><div class="pval">Custom</div><div class="punit">for business clients</div><ul class="pfeat"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul><a href="#" class="btn-card btn-ol">Contact Sales</a></div>
   </div>
 </section>
 
-<div class="stats-section">
-  <div class="stats-inner">
-    <div class="stat-block"><div class="stat-big">$5.36M</div><div class="stat-desc">In losses saved for clients over three years in business</div></div>
-    <div class="stat-block"><div class="stat-big">6.5M+</div><div class="stat-desc">Wallets containing stolen or dirty money flagged</div></div>
-    <div class="stat-block"><div class="stat-big">29%</div><div class="stat-desc">Of all wallets checked show suspicious patterns</div></div>
+<div class="stats-sec">
+  <div class="stats-in">
+    <div class="stat-bl"><div class="stat-big">$5.36M</div><div class="stat-d">In losses saved for clients over three years in business</div></div>
+    <div class="stat-bl"><div class="stat-big">6.5M+</div><div class="stat-d">Wallets containing stolen or dirty money flagged</div></div>
+    <div class="stat-bl"><div class="stat-big">29%</div><div class="stat-d">Of all wallets checked show suspicious patterns</div></div>
   </div>
 </div>
 
 <section id="faq">
-  <div class="section-label">// FAQ</div>
+  <div class="slabel">// FAQ</div>
   <h2>Frequently asked questions</h2>
-  <p class="section-sub">Everything you need to know about AML wallet verification.</p>
+  <p class="ssub">Everything you need to know about AML wallet verification.</p>
   <div class="faq-list">
-    <div class="faq-item open"><div class="faq-q" onclick="toggleFaq(this)">What does address verification show? <span class="arrow">▾</span></div><div class="faq-a">Address verification shows whether a crypto wallet has been associated with any illicit activities or is on any sanctions lists. It helps ensure you're not transacting with risky addresses.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How does the Trust Wallet connection work? <span class="arrow">▾</span></div><div class="faq-a">We use WalletConnect v2 — click "Connect Wallet", scan the QR code with Trust Wallet. No private keys are ever shared — only your public address is read.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What do the risk parameters mean? <span class="arrow">▾</span></div><div class="faq-a">Risk indicators include sanctions status, dark market exposure, stolen coin connections, and more. Each is scored as a percentage — higher means greater risk.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How fast is the balance replenished? <span class="arrow">▾</span></div><div class="faq-a">Balance replenishment typically occurs within minutes after a transaction is confirmed on the blockchain, depending on network congestion.</div></div>
+    <div class="faq-item open"><div class="faq-q" onclick="toggleFaq(this)">What does address verification show? <span class="arrow">▾</span></div><div class="faq-a">Address verification shows whether a crypto wallet has been associated with any illicit activities or is on any sanctions lists.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How does the Trust Wallet connection work? <span class="arrow">▾</span></div><div class="faq-a">We use WalletConnect v2. Click "Connect Wallet", scan the QR with Trust Wallet. No private keys are ever shared — only your public address is read.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What do the risk parameters mean? <span class="arrow">▾</span></div><div class="faq-a">Risk indicators include sanctions status, dark market exposure, stolen coin connections, and more. Each scored as a percentage — higher means greater risk.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How fast is the balance replenished? <span class="arrow">▾</span></div><div class="faq-a">Balance replenishment typically occurs within minutes after a transaction is confirmed on the blockchain.</div></div>
   </div>
 </section>
 
 <footer>
-  <div class="footer-inner">
-    <div class="footer-brand"><a href="#" class="nav-logo" style="font-size:1.2rem">🔍 <span>AMLProof</span></a><p>The #1 wallet verification service — fast, secure, and reliable. Trusted by professionals worldwide.</p></div>
-    <div><div class="footer-h">Services</div><ul class="footer-links"><li><a href="#check">Check Wallet</a></li><li><a href="#categories">Risk Analysis</a></li><li><a href="#how">About</a></li></ul></div>
-    <div><div class="footer-h">Company</div><ul class="footer-links"><li><a href="#">Certificates</a></li><li><a href="#">24/7 Support</a></li><li><a href="#">Blog</a></li></ul></div>
-    <div><div class="footer-h">Legal</div><ul class="footer-links"><li><a href="#">Terms of Service</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Cookie Policy</a></li></ul></div>
+  <div class="footer-in">
+    <div class="fbrand"><a href="#" class="nav-logo" style="font-size:1.2rem">🔍 <span>AMLProof</span></a><p>The #1 wallet verification service — fast, secure, and reliable.</p></div>
+    <div><div class="fh">Services</div><ul class="flinks"><li><a href="#check">Check Wallet</a></li><li><a href="#categories">Risk Analysis</a></li><li><a href="#how">About</a></li></ul></div>
+    <div><div class="fh">Company</div><ul class="flinks"><li><a href="#">Certificates</a></li><li><a href="#">24/7 Support</a></li><li><a href="#">Blog</a></li></ul></div>
+    <div><div class="fh">Legal</div><ul class="flinks"><li><a href="#">Terms of Service</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Cookie Policy</a></li></ul></div>
   </div>
-  <div class="footer-bottom">
-    <span>SAFELEMENT LIMITED · FLAT H 3/F TOWER 5 THE BEAUMOUNT, HONG KONG</span>
-    <span>© 2025 AMLProof. All rights reserved.</span>
-  </div>
+  <div class="fbot"><span>SAFELEMENT LIMITED · HONG KONG</span><span>© 2025 AMLProof. All rights reserved.</span></div>
 </footer>
 
-<!-- ================================================================
-  WALLETCONNECT v2 — Pure JS, no build tool needed
-  Uses @walletconnect/sign-client loaded dynamically
-  Project ID: 0e2d855e-cfc3-4b2f-aea7-6bfff158d7ae
-================================================================ -->
+<!-- ═══ WALLETCONNECT v2 ════════════════════════════════════
+  Project ID : 0e2d855e-cfc3-4b2f-aea7-6bfff158d7ae
+  Domain     : dapp1985.github.io  ← must be in Reown dashboard
+═══════════════════════════════════════════════════════════ -->
 <script>
 const PROJECT_ID = '0e2d855e-cfc3-4b2f-aea7-6bfff158d7ae';
+const APP_URL    = 'https://dapp1985.github.io/amlproof/';
 
-let signClient   = null;
-let activeSession = null;
-let currentURI   = null;
-let qrRendered   = false;
+let SC          = null;   // SignClient instance
+let session     = null;   // active session
+let pendingURI  = null;   // wc: URI for QR
+let qrDone      = false;  // QR already rendered?
 
-/* ── Modal helpers ───────────────────────────────── */
+/* ── Show a modal state ─────────────────────────── */
+function showState(id) {
+  ['m-loading','m-qr','m-connected','m-error'].forEach(s => {
+    document.getElementById(s).classList.toggle('active', s === id);
+  });
+}
+
+/* ── Modal open/close ───────────────────────────── */
 function openModal() {
   document.getElementById('wcModal').classList.add('open');
-  if (activeSession) {
-    showModalConnected(getAddress());
-    return;
-  }
-  showLoading();
-  initAndConnect();
+  if (session) { showConnected(getAddr()); return; }
+  showState('m-loading');
+  startConnect();
 }
 function closeModal() {
   document.getElementById('wcModal').classList.remove('open');
 }
-function handleOverlayClick(e) {
+function bgClick(e) {
   if (e.target === document.getElementById('wcModal')) closeModal();
 }
-function showLoading() {
-  document.getElementById('modalLoading').style.display = 'flex';
-  document.getElementById('modalQR').style.display = 'none';
-  document.getElementById('modalConnected').style.display = 'none';
-}
-function showQR(uri) {
-  document.getElementById('modalLoading').style.display = 'none';
-  document.getElementById('modalQR').style.display = 'block';
-  document.getElementById('modalConnected').style.display = 'none';
-  document.getElementById('uriBox').textContent = uri;
-  if (!qrRendered) {
-    new QRCode(document.getElementById('qrcode'), {
-      text: uri,
-      width: 220, height: 220,
-      colorDark: '#000000',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    qrRendered = true;
-  }
-}
-function showModalConnected(addr) {
-  document.getElementById('modalLoading').style.display = 'none';
-  document.getElementById('modalQR').style.display = 'none';
-  document.getElementById('modalConnected').style.display = 'flex';
-  document.getElementById('modalConnectedAddr').textContent = addr ? addr.slice(0,6)+'...'+addr.slice(-4) : '';
-  setTimeout(closeModal, 2000);
-}
-function copyURI() {
-  if (!currentURI) return;
-  navigator.clipboard.writeText(currentURI).then(() => {
-    const btn = event.target;
-    btn.textContent = '✅ Copied!';
-    setTimeout(() => btn.textContent = '📋 Copy', 2000);
-  });
-}
 
-/* ── Load SignClient dynamically ─────────────────── */
-function loadScript(src) {
+/* ── Load SignClient from unpkg (UMD) ───────────── */
+function injectScript(src) {
   return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
     const s = document.createElement('script');
-    s.src = src;
-    s.onload = res;
-    s.onerror = rej;
+    s.src = src; s.crossOrigin = 'anonymous';
+    s.onload = res; s.onerror = () => rej(new Error('Failed: ' + src));
     document.head.appendChild(s);
   });
 }
 
-async function getSignClient() {
-  if (signClient) return signClient;
+async function loadSignClient() {
+  if (SC) return SC;
 
-  // Load the UMD bundle
-  await loadScript(
+  await injectScript(
     'https://unpkg.com/@walletconnect/sign-client@2.17.4/dist/index.umd.js'
   );
 
-  const SC =
-    window.SignClient?.SignClient ||
-    window['@walletconnect/sign-client']?.SignClient ||
-    window.SignClient;
+  // The UMD export can be in different places depending on version
+  const Ctor =
+    window.SignClient?.SignClient ??
+    window.SignClient ??
+    window['@walletconnect/sign-client']?.SignClient ??
+    window['@walletconnect/sign-client'];
 
-  if (!SC) throw new Error('SignClient not found after script load');
+  if (!Ctor) throw new Error('SignClient constructor not found');
 
-  signClient = await SC.init({
+  SC = await Ctor.init({
     projectId: PROJECT_ID,
-    metadata: {
-      name: 'AMLProof',
+    metadata : {
+      name       : 'AMLProof',
       description: 'AML Crypto Wallet Verification',
-      url: 'https://dapp1985.github.io/amlproof/',
-      icons: ['https://avatars.githubusercontent.com/u/179229932']
+      url        : APP_URL,
+      icons      : ['https://avatars.githubusercontent.com/u/179229932']
     }
   });
 
-  /* Restore existing session */
-  const sessions = signClient.session.getAll();
-  if (sessions.length > 0) {
-    activeSession = sessions[sessions.length - 1];
-    onConnected(getAddress());
-  }
+  // Restore previous session
+  const all = SC.session.getAll();
+  if (all.length) { session = all[all.length - 1]; uiConnected(getAddr()); }
 
-  signClient.on('session_delete', onDisconnected);
-  signClient.on('session_expire', onDisconnected);
+  SC.on('session_delete', () => uiDisconnected());
+  SC.on('session_expire', () => uiDisconnected());
 
-  return signClient;
+  return SC;
 }
 
-/* ── Connect flow ────────────────────────────────── */
-async function initAndConnect() {
+/* ── Main connect flow ──────────────────────────── */
+async function startConnect() {
   try {
-    const client = await getSignClient();
+    const client = await loadSignClient();
 
-    /* If already have a session, just show it */
-    if (activeSession) {
-      showModalConnected(getAddress());
-      return;
-    }
+    if (session) { showConnected(getAddr()); return; }
 
     const { uri, approval } = await client.connect({
       requiredNamespaces: {
         eip155: {
-          methods: ['eth_sendTransaction', 'personal_sign'],
-          chains:  ['eip155:1'],
-          events:  ['chainChanged', 'accountsChanged']
+          methods: ['eth_sendTransaction','personal_sign','eth_sign'],
+          chains : ['eip155:1'],
+          events : ['chainChanged','accountsChanged']
         }
       }
     });
 
-    currentURI = uri;
-    qrRendered = false;
-    document.getElementById('qrcode').innerHTML = '';
-    showQR(uri);
+    if (!uri) throw new Error('No URI returned from WalletConnect');
 
-    /* Wait for wallet approval */
-    activeSession = await approval();
-    onConnected(getAddress());
-    showModalConnected(getAddress());
+    pendingURI = uri;
+    renderQR(uri);
+
+    // Await wallet approval (blocking, but modal stays open)
+    session = await approval();
+    uiConnected(getAddr());
+    showConnected(getAddr());
 
   } catch (err) {
-    console.error('WC error:', err);
-    closeModal();
+    console.error('[WC]', err);
+    const isAuth = /unauthorized|invalid key|3000/i.test(err.message || '');
+    showError(isAuth
+      ? 'Unauthorized: your Project ID is being rejected by the relay server. You need to add <strong>dapp1985.github.io</strong> to your Allowed Domains in the Reown dashboard.'
+      : (err.message || 'Unknown error — check the console for details.')
+    );
   }
 }
 
-/* ── Disconnect ──────────────────────────────────── */
+function retryConnect() {
+  showState('m-loading');
+  qrDone = false;
+  document.getElementById('qrcode').innerHTML = '';
+  startConnect();
+}
+
+/* ── Render QR ──────────────────────────────────── */
+function renderQR(uri) {
+  showState('m-qr');
+  document.getElementById('uriBox').textContent = uri;
+  if (!qrDone) {
+    new QRCode(document.getElementById('qrcode'), {
+      text        : uri,
+      width       : 220,
+      height      : 220,
+      colorDark   : '#000000',
+      colorLight  : '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    qrDone = true;
+  }
+}
+
+function copyURI() {
+  if (!pendingURI) return;
+  navigator.clipboard.writeText(pendingURI).then(() => {
+    const b = document.getElementById('copyBtn');
+    b.textContent = '✅ Copied!';
+    setTimeout(() => b.textContent = '📋 Copy', 2000);
+  });
+}
+
+/* ── Connected state ────────────────────────────── */
+function showConnected(addr) {
+  showState('m-connected');
+  document.getElementById('m-conn-addr').textContent = addr ? short(addr) : '';
+  setTimeout(closeModal, 2200);
+}
+
+function showError(msg) {
+  showState('m-error');
+  document.getElementById('m-err-msg').innerHTML = msg;
+}
+
+/* ── Disconnect ─────────────────────────────────── */
 async function disconnectWallet() {
-  if (signClient && activeSession) {
-    try {
-      await signClient.disconnect({
-        topic:  activeSession.topic,
-        reason: { code: 6000, message: 'User disconnected' }
-      });
-    } catch(e) {}
+  if (SC && session) {
+    try { await SC.disconnect({ topic: session.topic, reason: { code: 6000, message: 'User disconnected' } }); }
+    catch(e) {}
   }
-  onDisconnected();
+  uiDisconnected();
 }
 
-/* ── Address helper ──────────────────────────────── */
-function getAddress() {
-  try {
-    const accs = activeSession.namespaces.eip155.accounts;
-    return accs[0].split(':')[2];
-  } catch(e) { return null; }
+/* ── Helpers ────────────────────────────────────── */
+function getAddr() {
+  try { return session.namespaces.eip155.accounts[0].split(':')[2]; }
+  catch(e) { return null; }
 }
+function short(a) { return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
 
-/* ── UI updates ──────────────────────────────────── */
-function onConnected(addr) {
-  activeSession = signClient.session.getAll().slice(-1)[0] || activeSession;
-
-  const short = addr ? addr.slice(0,6)+'...'+addr.slice(-4) : '...';
-
-  /* Nav button */
-  const btn = document.getElementById('navConnectBtn');
+function uiConnected(addr) {
+  const s = short(addr);
+  const btn = document.getElementById('navBtn');
   btn.classList.add('connected');
-  btn.innerHTML = `<span class="live-dot"></span>${short}`;
-
-  /* Status bar */
-  document.getElementById('connectedAddr').textContent = short;
+  btn.innerHTML = `<span class="live-dot"></span>${s}`;
+  document.getElementById('connAddr').textContent = s;
   document.getElementById('statusBar').classList.add('show');
-
-  /* Auto-fill input */
   document.getElementById('walletInput').value = addr || '';
-
-  /* Hide connect CTA */
-  const cta = document.getElementById('connectCta');
-  if (cta) cta.style.display = 'none';
+  const c = document.getElementById('ccta');
+  if (c) c.style.display = 'none';
 }
 
-function onDisconnected() {
-  activeSession = null;
-  const btn = document.getElementById('navConnectBtn');
+function uiDisconnected() {
+  session = null;
+  const btn = document.getElementById('navBtn');
   btn.classList.remove('connected');
   btn.innerHTML = '🔗 Connect Wallet';
   document.getElementById('statusBar').classList.remove('show');
   document.getElementById('walletInput').value = '';
-  const cta = document.getElementById('connectCta');
-  if (cta) cta.style.display = 'flex';
+  const c = document.getElementById('ccta');
+  if (c) c.style.display = 'flex';
 }
 
-/* ── Checker ─────────────────────────────────────── */
+/* ── Checker ────────────────────────────────────── */
 function runCheck() {
   const addr = document.getElementById('walletInput').value.trim();
-  const result = document.getElementById('checkerResult');
-  const badge  = document.getElementById('resultBadge');
-  const addrEl = document.getElementById('resultAddr');
-  const msg    = document.getElementById('resultMsg');
+  const result = document.getElementById('chkResult');
   if (!addr) {
-    const inp = document.getElementById('walletInput');
-    inp.style.borderColor = 'var(--danger)';
-    inp.placeholder = '⚠ Enter or connect a wallet first';
-    setTimeout(() => { inp.style.borderColor=''; inp.placeholder='0x... or bitcoin address'; }, 2500);
+    const i = document.getElementById('walletInput');
+    i.style.borderColor = 'var(--danger)';
+    i.placeholder = '⚠ Enter or connect a wallet first';
+    setTimeout(()=>{ i.style.borderColor=''; i.placeholder='0x... or bitcoin address'; }, 2500);
     return;
   }
-  addrEl.textContent = addr;
-  const score = Math.random();
-  if (score < 0.4) {
-    badge.className='risk-badge risk-low'; badge.textContent='CLEAN';
-    msg.textContent='✅ No sanctions hits found. This address has low risk. Safe to transact.';
-  } else if (score < 0.7) {
-    badge.className='risk-badge risk-med'; badge.textContent='MODERATE RISK';
-    msg.textContent='⚠ Some suspicious activity detected. Proceed with caution before transacting.';
-  } else {
-    badge.className='risk-badge risk-high'; badge.textContent='HIGH RISK';
-    msg.textContent='🚨 Flagged for high-risk activity including possible sanctions exposure. Do not transact.';
-  }
+  document.getElementById('resAddr').textContent = addr;
+  const s = Math.random();
+  const badge = document.getElementById('resBadge');
+  const msg   = document.getElementById('resMsg');
+  if      (s < 0.4) { badge.className='risk-badge risk-low';  badge.textContent='CLEAN';         msg.textContent='✅ No sanctions hits found. Low risk. Safe to transact.'; }
+  else if (s < 0.7) { badge.className='risk-badge risk-med';  badge.textContent='MODERATE RISK'; msg.textContent='⚠ Suspicious activity detected. Proceed with caution.'; }
+  else              { badge.className='risk-badge risk-high'; badge.textContent='HIGH RISK';      msg.textContent='🚨 High-risk address. Possible sanctions exposure. Do not transact.'; }
   result.classList.add('visible');
   result.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 document.getElementById('walletInput').addEventListener('keydown', e => { if(e.key==='Enter') runCheck(); });
 
-/* ── FAQ ─────────────────────────────────────────── */
+/* ── FAQ ────────────────────────────────────────── */
 function toggleFaq(el) {
-  const item = el.parentElement;
-  const wasOpen = item.classList.contains('open');
+  const it = el.parentElement, was = it.classList.contains('open');
   document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-  if (!wasOpen) item.classList.add('open');
+  if (!was) it.classList.add('open');
 }
 
-/* ── Scroll reveal ───────────────────────────────── */
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }});
-}, { threshold:0.1 });
+/* ── Scroll reveal ──────────────────────────────── */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+}), { threshold: 0.1 });
 document.querySelectorAll('.step-card,.price-card,.cat-card').forEach(el => {
-  el.style.opacity='0'; el.style.transform='translateY(20px)';
-  el.style.transition='opacity .5s ease,transform .5s ease,border-color .3s';
-  obs.observe(el);
+  el.style.cssText += 'opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease,border-color .3s';
+  io.observe(el);
 });
 </script>
 </body>
