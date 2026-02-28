@@ -540,6 +540,21 @@ function bgClick(e) {
   if (e.target === document.getElementById('wcModal')) closeModal();
 }
 
+/* ── Timeout helper ─────────────────────────────── */
+function withTimeout(promise, ms, label) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('Timeout: ' + label + ' took longer than ' + (ms/1000) + 's')), ms);
+    promise.then(v => { clearTimeout(t); resolve(v); }, e => { clearTimeout(t); reject(e); });
+  });
+}
+
+function setLoadingMsg(msg) {
+  const el = document.querySelector('#m-loading .loading-text');
+  if (el) el.textContent = msg;
+}
+
+let connectAttempt = 0;
+
 /* ── Load SignClient from unpkg (UMD) ───────────── */
 function injectScript(src) {
   return new Promise((res, rej) => {
@@ -554,11 +569,12 @@ function injectScript(src) {
 async function loadSignClient() {
   if (SC) return SC;
 
-  await injectScript(
-    'https://unpkg.com/@walletconnect/sign-client@2.13.3/dist/index.umd.js'
+  setLoadingMsg('Loading SDK… (may take a moment on slow networks)');
+  await withTimeout(
+    injectScript('https://unpkg.com/@walletconnect/sign-client@2.13.3/dist/index.umd.js'),
+    30000, 'SDK load'
   );
 
-  // The UMD export can be in different places depending on version
   const Ctor =
     window.SignClient?.SignClient ??
     window.SignClient ??
@@ -567,16 +583,20 @@ async function loadSignClient() {
 
   if (!Ctor) throw new Error('SignClient constructor not found');
 
-  SC = await Ctor.init({
-    projectId: PROJECT_ID,
-    relayUrl : 'wss://relay.walletconnect.com',
-    metadata : {
-      name       : 'AMLProof',
-      description: 'AML Crypto Wallet Verification',
-      url        : APP_URL,
-      icons      : ['https://avatars.githubusercontent.com/u/179229932']
-    }
-  });
+  setLoadingMsg('Connecting to relay server…');
+  SC = await withTimeout(
+    Ctor.init({
+      projectId: PROJECT_ID,
+      relayUrl : 'wss://relay.walletconnect.com',
+      metadata : {
+        name       : 'AMLProof',
+        description: 'AML Crypto Wallet Verification',
+        url        : APP_URL,
+        icons      : ['https://avatars.githubusercontent.com/u/179229932']
+      }
+    }),
+    20000, 'relay init'
+  );
 
   // Restore previous session
   const all = SC.session.getAll();
@@ -590,45 +610,57 @@ async function loadSignClient() {
 
 /* ── Main connect flow ──────────────────────────── */
 async function startConnect() {
+  connectAttempt++;
+  const attempt = connectAttempt;
   try {
+    setLoadingMsg('Initialising…');
     const client = await loadSignClient();
 
     if (session) { showConnected(getAddr()); return; }
 
-    const { uri, approval } = await client.connect({
-      requiredNamespaces: {
-        eip155: {
-          methods: ['eth_sendTransaction','personal_sign','eth_sign'],
-          chains : ['eip155:1'],
-          events : ['chainChanged','accountsChanged']
+    setLoadingMsg('Requesting QR code…');
+    const { uri, approval } = await withTimeout(
+      client.connect({
+        requiredNamespaces: {
+          eip155: {
+            methods: ['eth_sendTransaction','personal_sign','eth_sign'],
+            chains : ['eip155:1'],
+            events : ['chainChanged','accountsChanged']
+          }
         }
-      }
-    });
+      }),
+      15000, 'connect'
+    );
 
     if (!uri) throw new Error('No URI returned from WalletConnect');
 
     pendingURI = uri;
     renderQR(uri);
 
-    // Await wallet approval (blocking, but modal stays open)
+    // Await wallet approval — no timeout, user may take time to scan
     session = await approval();
     uiConnected(getAddr());
     showConnected(getAddr());
 
   } catch (err) {
+    if (attempt !== connectAttempt) return; // stale attempt, ignore
     console.error('[WC]', err);
-    const isAuth  = /unauthorized|invalid key|3000/i.test(err.message || '');
-    const isRelay = /interrupted|subscribe|relay|websocket/i.test(err.message || '');
+    const isAuth    = /unauthorized|invalid key|3000/i.test(err.message || '');
+    const isRelay   = /interrupted|subscribe|relay|websocket/i.test(err.message || '');
+    const isTimeout = /timeout/i.test(err.message || '');
     showError(isAuth
-      ? 'Unauthorized: your Project ID is being rejected by the relay server. You need to add <strong>dapp1985.github.io</strong> to your Allowed Domains in the Reown dashboard.'
+      ? 'Unauthorized: your Project ID is being rejected by the relay server. Add <strong>dapp1985.github.io</strong> to Allowed Domains in the Reown dashboard.'
+      : isTimeout
+      ? 'Connection timed out — your network may be slow. Please check your connection and try again.'
       : isRelay
-      ? 'Relay connection failed. Please ensure <strong>dapp1985.github.io</strong> is added to your Allowed Domains at <strong>cloud.reown.com</strong>, then retry.'
+      ? 'Relay connection failed. Ensure <strong>dapp1985.github.io</strong> is in your Allowed Domains at <strong>cloud.reown.com</strong>, then retry.'
       : (err.message || 'Unknown error — check the console for details.')
     );
   }
 }
 
 function retryConnect() {
+  SC = null; // force fresh relay reconnect
   showState('m-loading');
   qrDone = false;
   document.getElementById('qrcode').innerHTML = '';
