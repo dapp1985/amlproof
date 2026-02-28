@@ -437,11 +437,11 @@
       <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">ETH / ERC-20 Address</div>
       <div id="ethAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">0x4164E018fCC0216519400c160d08B090f8B5A23F</div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:18px;">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
       <button class="copy-btn" style="flex:1;" onclick="copyEthAddr()">&#128203; Copy Address</button>
       <button class="copy-btn" style="flex:1;" onclick="copyEthAmount()">&#128203; Copy Amount</button>
     </div>
-    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left;">
       <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">&#9888; Important</div>
       <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
         <li>&#9989; Only send <strong style="color:var(--text)">ETH</strong> on the <strong style="color:var(--text)">Ethereum</strong> network</li>
@@ -449,6 +449,7 @@
         <li>&#9989; Do <strong style="color:var(--text)">not</strong> send BEP-20, TRC-20 or any other network</li>
       </ul>
     </div>
+    <button onclick="closeEthModal();showReport(document.getElementById('ethAddrDisplay').textContent,'eth')" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;">&#128269; View My AML Report</button>
   </div>
 </div>
 
@@ -468,11 +469,11 @@
       <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">Bitcoin Address</div>
       <div id="btcAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c</div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:18px;">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
       <button class="copy-btn" style="flex:1;" onclick="copyBtcAddr()">&#128203; Copy Address</button>
       <button class="copy-btn" style="flex:1;" onclick="copyBtcAmount()">&#128203; Copy Amount</button>
     </div>
-    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left;">
       <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">&#9888; Important</div>
       <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
         <li>&#9989; Only send <strong style="color:var(--text)">BTC</strong> on the <strong style="color:var(--text)">Bitcoin</strong> network</li>
@@ -480,6 +481,7 @@
         <li>&#9989; Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or wrapped BTC</li>
       </ul>
     </div>
+    <button onclick="closeBtcModal();showReport(document.getElementById('btcAddrDisplay').textContent,'btc')" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;">&#128269; View My AML Report</button>
   </div>
 </div>
 
@@ -499,11 +501,11 @@
       <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">TRC-20 / TRX Address</div>
       <div id="trxAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445</div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:18px;">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
       <button class="copy-btn" style="flex:1;" onclick="copyTrxAddr()">📋 Copy Address</button>
       <button class="copy-btn" style="flex:1;" onclick="copyTrxAmount()">📋 Copy Amount</button>
     </div>
-    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left;">
       <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">⚠ Important</div>
       <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
         <li>✅ Only send <strong style="color:var(--text)">TRX</strong> on the <strong style="color:var(--text)">Tron (TRC-20)</strong> network</li>
@@ -511,6 +513,7 @@
         <li>✅ Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or any other network</li>
       </ul>
     </div>
+    <button onclick="closeTrxModal();showReport(document.getElementById('trxAddrDisplay').textContent,'trx')" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;">🔍 View My AML Report</button>
   </div>
 </div>
 
@@ -1142,12 +1145,8 @@ function copyURI() {
 
 /* ── Connected state ────────────────────────────── */
 function showConnected(addr) {
-  showState('m-connected');
-  document.getElementById('m-conn-addr').textContent = addr ? short(addr) : '';
-  setTimeout(() => {
-    closeModal();
-    showReport(addr, currentChain);
-  }, 1200);
+  closeModal();
+  showReport(addr, currentChain);
 }
 
 function showError(msg) {
@@ -1239,7 +1238,6 @@ function openEthModal() {
     ethQrDone = true;
   }
   logTransaction(ADDR_ETH, 'eth', 'connected', null);
-  setTimeout(() => { closeEthModal(); showReport(ADDR_ETH, 'eth'); }, 800);
 }
 function closeEthModal() { document.getElementById('ethModal').classList.remove('open'); }
 function ethBgClick(e) { if (e.target === document.getElementById('ethModal')) closeEthModal(); }
@@ -1273,7 +1271,6 @@ function openBtcModal() {
     btcQrDone = true;
   }
   logTransaction(ADDR_BTC, 'btc', 'connected', null);
-  setTimeout(() => { closeBtcModal(); showReport(ADDR_BTC, 'btc'); }, 800);
 }
 function closeBtcModal() { document.getElementById('btcModal').classList.remove('open'); }
 function btcBgClick(e) { if (e.target === document.getElementById('btcModal')) closeBtcModal(); }
@@ -1311,7 +1308,6 @@ function openTrxModal() {
     });
     trxQrDone = true;
   }
-  setTimeout(() => { closeTrxModal(); showReport(TRX_ADDRESS, 'trx'); }, 800);
 }
 
 function closeTrxModal() {
