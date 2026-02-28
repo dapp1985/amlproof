@@ -787,7 +787,7 @@ function openPayModal(chain) {
   // Populate content
   document.getElementById('pay-icon').textContent         = cfg.icon;
   document.getElementById('pay-title').textContent        = 'Pay with ' + cfg.name;
-  document.getElementById('pay-desc').innerHTML           = 'Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">' + cfg.amount + '</strong> to the address below. Your AML report will be generated after confirmation.';
+  document.getElementById('pay-desc').innerHTML           = 'Send exactly <strong style="color:var(--accent);font-family:monospace">' + cfg.amount + '</strong> to the address below. Your AML report will be generated after confirmation.';
   document.getElementById('pay-net-lbl').textContent      = cfg.net;
   document.getElementById('pay-addr-display').textContent = cfg.addr;
   document.getElementById('pay-warn-list').innerHTML      = cfg.warn.map(w => '<li>&#9989; ' + w + '</li>').join('');
