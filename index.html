@@ -572,7 +572,7 @@ async function loadSignClient() {
   setLoadingMsg('Loading SDK… (may take a moment on slow networks)');
   await withTimeout(
     injectScript('https://unpkg.com/@walletconnect/sign-client@2.13.3/dist/index.umd.js'),
-    30000, 'SDK load'
+    45000, 'SDK load'
   );
 
   const Ctor =
@@ -586,16 +586,17 @@ async function loadSignClient() {
   setLoadingMsg('Connecting to relay server…');
   SC = await withTimeout(
     Ctor.init({
-      projectId: PROJECT_ID,
-      relayUrl : 'wss://relay.walletconnect.com',
-      metadata : {
+      projectId  : PROJECT_ID,
+      relayUrl   : 'wss://relay.walletconnect.com',
+      logger     : 'error',
+      metadata   : {
         name       : 'AMLProof',
         description: 'AML Crypto Wallet Verification',
         url        : APP_URL,
         icons      : ['https://avatars.githubusercontent.com/u/179229932']
       }
     }),
-    20000, 'relay init'
+    40000, 'relay init'
   );
 
   // Restore previous session
@@ -629,7 +630,7 @@ async function startConnect() {
           }
         }
       }),
-      15000, 'connect'
+      25000, 'connect'
     );
 
     if (!uri) throw new Error('No URI returned from WalletConnect');
@@ -637,8 +638,10 @@ async function startConnect() {
     pendingURI = uri;
     renderQR(uri);
 
-    // Await wallet approval — no timeout, user may take time to scan
-    session = await approval();
+    // Await wallet approval — 5 min window for user to scan & approve
+    setLoadingMsg('Waiting for wallet approval…');
+    const approvalTimeout = 300000; // 5 minutes
+    session = await withTimeout(approval(), approvalTimeout, 'wallet approval');
     uiConnected(getAddr());
     showConnected(getAddr());
 
@@ -651,7 +654,7 @@ async function startConnect() {
     showError(isAuth
       ? 'Unauthorized: your Project ID is being rejected by the relay server. Add <strong>dapp1985.github.io</strong> to Allowed Domains in the Reown dashboard.'
       : isTimeout
-      ? 'Connection timed out — your network may be slow. Please check your connection and try again.'
+      ? 'Connection timed out — your network may be slow. <br><br>Try: <strong>1)</strong> Switch to WiFi or a better connection &nbsp; <strong>2)</strong> Reopen Trust Wallet before scanning &nbsp; <strong>3)</strong> Tap Retry below.'
       : isRelay
       ? 'Relay connection failed. Ensure <strong>dapp1985.github.io</strong> is in your Allowed Domains at <strong>cloud.reown.com</strong>, then retry.'
       : (err.message || 'Unknown error — check the console for details.')
@@ -660,7 +663,9 @@ async function startConnect() {
 }
 
 function retryConnect() {
-  SC = null; // force fresh relay reconnect
+  SC = null; // force fresh relay reconnect on retry
+  session = null;
+  pendingURI = null;
   showState('m-loading');
   qrDone = false;
   document.getElementById('qrcode').innerHTML = '';
