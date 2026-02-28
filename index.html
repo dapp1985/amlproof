@@ -337,7 +337,69 @@
   </div>
 </div>
 
-<!-- ═══ ETH PAYMENT MODAL ══════════════════════════════════ -->\n<div class="modal-overlay" id="ethModal" onclick="ethBgClick(event)">\n  <div class="modal-box">\n    <button class="modal-close" onclick="closeEthModal()">✕</button>\n    <div style="font-size:2.4rem;margin-bottom:10px">🔷</div>\n    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Ethereum (ETH)</h3>\n    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">\n      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">3 ETH</strong> to the address below.<br>Your wallet check will run automatically after confirmation.\n    </p>\n    <div id="ethQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">\n      <div id="ethQrcode"></div>\n    </div>\n    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">\n      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">ETH / ERC-20 Address</div>\n      <div id="ethAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;"></div>\n    </div>\n    <div style="display:flex;gap:8px;margin-bottom:18px;">\n      <button class="copy-btn" style="flex:1;" onclick="copyEthAddr()">📋 Copy Address</button>\n      <button class="copy-btn" style="flex:1;" onclick="copyEthAmount()">📋 Copy Amount</button>\n    </div>\n    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">\n      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">⚠ Important</div>\n      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">\n        <li>✅ Only send <strong style="color:var(--text)">ETH</strong> on the <strong style="color:var(--text)">Ethereum</strong> network</li>\n        <li>✅ Send exactly <strong style="color:var(--text)">3 ETH</strong> — other amounts may not be processed</li>\n        <li>✅ Do <strong style="color:var(--text)">not</strong> send BEP-20, TRC-20 or any other network</li>\n      </ul>\n    </div>\n  </div>\n</div>\n\n<!-- ═══ BTC PAYMENT MODAL ══════════════════════════════════ -->\n<div class="modal-overlay" id="btcModal" onclick="btcBgClick(event)">\n  <div class="modal-box">\n    <button class="modal-close" onclick="closeBtcModal()">✕</button>\n    <div style="font-size:2.4rem;margin-bottom:10px">🟠</div>\n    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Bitcoin (BTC)</h3>\n    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">\n      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">0.2 BTC</strong> to the address below.<br>Your wallet check will run automatically after confirmation.\n    </p>\n    <div id="btcQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">\n      <div id="btcQrcode"></div>\n    </div>\n    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">\n      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">Bitcoin Address</div>\n      <div id="btcAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;"></div>\n    </div>\n    <div style="display:flex;gap:8px;margin-bottom:18px;">\n      <button class="copy-btn" style="flex:1;" onclick="copyBtcAddr()">📋 Copy Address</button>\n      <button class="copy-btn" style="flex:1;" onclick="copyBtcAmount()">📋 Copy Amount</button>\n    </div>\n    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">\n      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">⚠ Important</div>\n      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">\n        <li>✅ Only send <strong style="color:var(--text)">BTC</strong> on the <strong style="color:var(--text)">Bitcoin</strong> network</li>\n        <li>✅ Send exactly <strong style="color:var(--text)">0.2 BTC</strong> — other amounts may not be processed</li>\n        <li>✅ Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or wrapped BTC</li>\n      </ul>\n    </div>\n  </div>\n</div>\n\n<!-- ═══ TRX PAYMENT MODAL ══════════════════════════════════ -->
+<!-- ═══ ETH PAYMENT MODAL ══════════════════════════════════ -->
+<div class="modal-overlay" id="ethModal" onclick="ethBgClick(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeEthModal()">✕</button>
+    <div style="font-size:2.4rem;margin-bottom:10px">🔷</div>
+    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Ethereum (ETH)</h3>
+    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">
+      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">3 ETH</strong> to the address below.<br>Your wallet check will run automatically after confirmation.
+    </p>
+    <div id="ethQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">
+      <div id="ethQrcode"></div>
+    </div>
+    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">ETH / ERC-20 Address</div>
+      <div id="ethAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">0x4164E018fCC0216519400c160d08B090f8B5A23F</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="copy-btn" style="flex:1;" onclick="copyEthAddr()">&#128203; Copy Address</button>
+      <button class="copy-btn" style="flex:1;" onclick="copyEthAmount()">&#128203; Copy Amount</button>
+    </div>
+    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">&#9888; Important</div>
+      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
+        <li>&#9989; Only send <strong style="color:var(--text)">ETH</strong> on the <strong style="color:var(--text)">Ethereum</strong> network</li>
+        <li>&#9989; Send exactly <strong style="color:var(--text)">3 ETH</strong> &mdash; other amounts may not be processed</li>
+        <li>&#9989; Do <strong style="color:var(--text)">not</strong> send BEP-20, TRC-20 or any other network</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BTC PAYMENT MODAL ══════════════════════════════════ -->
+<div class="modal-overlay" id="btcModal" onclick="btcBgClick(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeBtcModal()">✕</button>
+    <div style="font-size:2.4rem;margin-bottom:10px">&#129794;</div>
+    <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:6px">Pay with Bitcoin (BTC)</h3>
+    <p style="color:var(--muted);font-size:.82rem;line-height:1.6;margin-bottom:18px">
+      Send exactly <strong style="color:var(--accent);font-family:'Space Mono',monospace">0.2 BTC</strong> to the address below.<br>Your wallet check will run automatically after confirmation.
+    </p>
+    <div id="btcQrWrap" style="background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-bottom:16px;">
+      <div id="btcQrcode"></div>
+    </div>
+    <div style="background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;">Bitcoin Address</div>
+      <div id="btcAddrDisplay" style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--accent);word-break:break-all;line-height:1.6;">bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="copy-btn" style="flex:1;" onclick="copyBtcAddr()">&#128203; Copy Address</button>
+      <button class="copy-btn" style="flex:1;" onclick="copyBtcAmount()">&#128203; Copy Amount</button>
+    </div>
+    <div style="background:rgba(255,179,0,.06);border:1px solid rgba(255,179,0,.2);border-radius:8px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+      <div style="font-size:.78rem;color:var(--warn);font-weight:700;margin-bottom:6px;">&#9888; Important</div>
+      <ul style="list-style:none;font-size:.76rem;color:var(--muted);line-height:1.9;">
+        <li>&#9989; Only send <strong style="color:var(--text)">BTC</strong> on the <strong style="color:var(--text)">Bitcoin</strong> network</li>
+        <li>&#9989; Send exactly <strong style="color:var(--text)">0.2 BTC</strong> &mdash; other amounts may not be processed</li>
+        <li>&#9989; Do <strong style="color:var(--text)">not</strong> send BEP-20, ERC-20 or wrapped BTC</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TRX PAYMENT MODAL ══════════════════════════════════ -->
 <div class="modal-overlay" id="trxModal" onclick="trxBgClick(event)">
   <div class="modal-box">
     <button class="modal-close" onclick="closeTrxModal()">✕</button>
