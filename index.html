@@ -555,7 +555,7 @@ async function loadSignClient() {
   if (SC) return SC;
 
   await injectScript(
-    'https://unpkg.com/@walletconnect/sign-client@2.17.4/dist/index.umd.js'
+    'https://unpkg.com/@walletconnect/sign-client@2.13.3/dist/index.umd.js'
   );
 
   // The UMD export can be in different places depending on version
@@ -569,6 +569,7 @@ async function loadSignClient() {
 
   SC = await Ctor.init({
     projectId: PROJECT_ID,
+    relayUrl : 'wss://relay.walletconnect.com',
     metadata : {
       name       : 'AMLProof',
       description: 'AML Crypto Wallet Verification',
@@ -616,9 +617,12 @@ async function startConnect() {
 
   } catch (err) {
     console.error('[WC]', err);
-    const isAuth = /unauthorized|invalid key|3000/i.test(err.message || '');
+    const isAuth  = /unauthorized|invalid key|3000/i.test(err.message || '');
+    const isRelay = /interrupted|subscribe|relay|websocket/i.test(err.message || '');
     showError(isAuth
       ? 'Unauthorized: your Project ID is being rejected by the relay server. You need to add <strong>dapp1985.github.io</strong> to your Allowed Domains in the Reown dashboard.'
+      : isRelay
+      ? 'Relay connection failed. Please ensure <strong>dapp1985.github.io</strong> is added to your Allowed Domains at <strong>cloud.reown.com</strong>, then retry.'
       : (err.message || 'Unknown error — check the console for details.')
     );
   }
