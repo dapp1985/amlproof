@@ -1059,22 +1059,20 @@ function short(a) { return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
 function uiConnected(addr) {
   const s = short(addr);
   const btn = document.getElementById('navBtn');
-  btn.classList.add('connected');
-  btn.innerHTML = '<span class="live-dot"></span>' + s;
-  document.getElementById('connAddr').textContent = s;
-  document.getElementById('statusBar').classList.add('show');
-  document.getElementById('walletInput').value = addr || '';
-  const c = document.getElementById('ccta'); if (c) c.style.display = 'none';
+  if (btn) { btn.classList.add('connected'); btn.innerHTML = '<span class="live-dot"></span>' + s; }
+  const ca = document.getElementById('connAddr'); if (ca) ca.textContent = s;
+  const sb = document.getElementById('statusBar'); if (sb) sb.classList.add('show');
+  const wi = document.getElementById('walletInput'); if (wi) wi.value = addr || '';
+  const c  = document.getElementById('ccta'); if (c) c.style.display = 'none';
 }
 
 function uiDisconnected() {
   wcSession = null;
   const btn = document.getElementById('navBtn');
-  btn.classList.remove('connected');
-  btn.innerHTML = '🔗 Connect Wallet';
-  document.getElementById('statusBar').classList.remove('show');
-  document.getElementById('walletInput').value = '';
-  const c = document.getElementById('ccta'); if (c) c.style.display = 'flex';
+  if (btn) { btn.classList.remove('connected'); btn.innerHTML = '🔗 Connect Wallet'; }
+  const sb = document.getElementById('statusBar'); if (sb) sb.classList.remove('show');
+  const wi = document.getElementById('walletInput'); if (wi) wi.value = '';
+  const c  = document.getElementById('ccta'); if (c) c.style.display = 'flex';
 }
 
 function disconnectWallet() {
@@ -1088,19 +1086,23 @@ document.getElementById('disconnectBtn').onclick = disconnectWallet;
 
 // ── Manual checker ────────────────────────────────────────
 function runCheck() {
-  const addr = document.getElementById('walletInput').value.trim();
+  const i = document.getElementById('walletInput');
+  const addr = i ? i.value.trim() : '';
   if (!addr) {
-    const i = document.getElementById('walletInput');
-    i.style.borderColor = 'var(--danger)';
-    i.placeholder = '⚠ Enter or connect a wallet first';
-    setTimeout(()=>{ i.style.borderColor=''; i.placeholder='0x... or bitcoin address'; }, 2500);
+    if (i) {
+      i.style.borderColor = 'var(--danger)';
+      i.placeholder = '⚠ Enter or connect a wallet first';
+      setTimeout(()=>{ i.style.borderColor=''; i.placeholder='0x... or bitcoin address'; }, 2500);
+    }
     return;
   }
-  const chainVal = document.querySelector('.chain-select').value.toLowerCase();
+  const chainSel = document.querySelector('.chain-select');
+  const chainVal = chainSel ? chainSel.value.toLowerCase() : 'ethereum';
   const chainMap = { ethereum:'eth', bitcoin:'btc', tron:'trx', 'bnb chain':'bnb', solana:'sol' };
   showReport(addr, chainMap[chainVal] || 'eth');
 }
-document.getElementById('walletInput').addEventListener('keydown', e => { if(e.key==='Enter') runCheck(); });
+const _wi = document.getElementById('walletInput');
+if (_wi) _wi.addEventListener('keydown', e => { if(e.key==='Enter') runCheck(); });
 
 // ── FAQ ───────────────────────────────────────────────────
 function toggleFaq(el) {
