@@ -516,34 +516,6 @@
   </div>
 </section>
 
-<section id="check" style="padding-top:0">
-  <div class="slabel">// Live Check</div>
-  <h2>Check a wallet now</h2>
-  <div class="checker-wrap">
-    <h3>Wallet Address Verification</h3>
-    <p>Connect your Trust Wallet — your address auto-fills. Or enter any address manually.</p>
-    <div class="ccta" id="ccta">
-      <div class="ccta-icon">📱</div>
-      <div class="ccta-text"><h4>Connect via Trust Wallet</h4><p>Scan QR → address auto-fills below</p></div>
-      <button class="connect-btn" style="margin-left:auto" onclick="openModal()">Connect Now</button>
-    </div>
-    <div class="input-row">
-      <input class="wallet-input" type="text" placeholder="0x... or bitcoin address" id="walletInput">
-      <select class="chain-select"><option>Ethereum</option><option>Bitcoin</option><option>Tron</option><option>BNB Chain</option><option>Solana</option></select>
-    </div>
-    <div class="input-row" style="margin-bottom:0">
-      <button class="check-btn" onclick="runCheck()">🔍 Analyze Wallet</button>
-    </div>
-    <div class="chk-result" id="chkResult">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted)">SCAN COMPLETE</span>
-        <span class="risk-badge" id="resBadge">CLEAN</span>
-      </div>
-      <div class="waddr" id="resAddr"></div>
-      <p style="color:var(--muted);font-size:.82rem;margin-top:8px" id="resMsg"></p>
-    </div>
-  </div>
-</section>
 
 <section id="categories" style="padding-top:0">
   <div class="slabel">// Risk Categories</div>
