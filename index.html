@@ -791,83 +791,39 @@ function logTransaction(address, chain, status, errMsg) {
 }
 
 // ══════════════════════════════════════════════
-// ROUTER — show scanning overlay then report
+// ROUTER — shows loading then AML report directly
 // ══════════════════════════════════════════════
-
-// Demo addresses per chain for immediate report generation
-const DEMO_ADDRS = {
-  eth:      '0x4164E018fCC0216519400c160d08B090f8B5A23F',
-  usdt:     '0x4164E018fCC0216519400c160d08B090f8B5A23F',
-  usdc:     '0x4164E018fCC0216519400c160d08B090f8B5A23F',
-  bnb:      '0x4164E018fCC0216519400c160d08B090f8B5A23F',
-  trx:      'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445',
-  usdt_trc: 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445',
-  usdc_trc: 'TKeDPdqmCznwneTJXph8yx9QE6g6ZKy445',
-  sol:      'CKKD894vFgGJVMR63pELxKrUkT6ZfHgtB7cri27EmNm9',
-  btc:      'bc1qgq79csscqg4x69q4fvlvldewhfhh5psk7w0e8c',
+const DEMO_ADDRESSES = {
+  eth:      '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+  usdt:     '0xA2327a938Febf5FEC13baCFb16Ae10EcBc4cbDCe',
+  usdc:     '0x55FE002aeff02F77364de339a1292923A15844B8',
+  bnb:      '0x8894E0a0c962CB723c1976a4421c95949bE2D4E3',
+  trx:      'TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7',
+  usdt_trc: 'TXmVpin5vE5p8rArjd5n3W9x5v35w9oZHQ',
+  usdc_trc: 'TDqSquXBgUCLYvYC4XZgrprLK589dkhSCE',
+  sol:      '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+  btc:      'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
 };
 
 function openModal(chain) {
   currentChain = chain || 'eth';
-  showScanningThenReport(currentChain);
-}
 
-function showScanningThenReport(chain) {
-  // Create or reuse scanning overlay
-  let overlay = document.getElementById('scanOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'scanOverlay';
-    overlay.style.cssText = `
-      position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);
-      z-index:350;display:flex;align-items:center;justify-content:center;
-    `;
-    overlay.innerHTML = `
-      <div style="text-align:center;max-width:340px;padding:20px;">
-        <div style="width:64px;height:64px;border-radius:50%;border:3px solid rgba(0,229,255,.15);
-          border-top-color:var(--accent);animation:spin .8s linear infinite;margin:0 auto 24px;"></div>
-        <div style="font-size:1.1rem;font-weight:800;margin-bottom:8px;color:var(--text);" id="scan-title">Connecting Wallet…</div>
-        <div style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--muted);line-height:1.7;" id="scan-msg">Initialising secure session</div>
-        <div style="margin-top:20px;display:flex;flex-direction:column;gap:6px;" id="scan-steps"></div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-  }
-  overlay.style.display = 'flex';
+  // Show the WC modal in loading state briefly, then fire the report
+  wcShowState('wc-loading');
+  setWcMsg('Scanning wallet…');
+  document.getElementById('wcModal').classList.add('open');
 
-  const cfg = COIN_CONFIG[chain] || {};
-  const steps = [
-    { msg:'Handshaking with relay…',          delay:0    },
-    { msg:'Reading public address…',           delay:600  },
-    { msg:'Querying ' + (cfg.name||chain) + ' blockchain…', delay:1200 },
-    { msg:'Screening 47 sanctions databases…', delay:2000 },
-    { msg:'Calculating risk score…',           delay:2800 },
-    { msg:'Generating compliance report…',     delay:3400 },
-  ];
+  const demoAddr = DEMO_ADDRESSES[currentChain] || DEMO_ADDRESSES.eth;
 
-  const stepsEl = document.getElementById('scan-steps');
-  stepsEl.innerHTML = '';
-
-  steps.forEach((s, i) => {
-    setTimeout(() => {
-      // Update main message
-      document.getElementById('scan-msg').textContent = s.msg;
-      // Append step indicator
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;font-family:Space Mono,monospace;font-size:.65rem;color:var(--muted);opacity:0;transition:opacity .3s;';
-      row.innerHTML = '<span style="color:var(--accent)">✓</span><span>' + s.msg + '</span>';
-      stepsEl.appendChild(row);
-      requestAnimationFrame(() => row.style.opacity = '1');
-    }, s.delay);
-  });
-
-  // Show report after all steps
   setTimeout(() => {
-    overlay.style.display = 'none';
-    const addr = DEMO_ADDRS[chain] || DEMO_ADDRS.eth;
-    uiConnected(addr);
-    showReport(addr, chain);
-  }, 4000);
+    setWcMsg('Running AML checks…');
+  }, 600);
+
+  setTimeout(() => {
+    document.getElementById('wcModal').classList.remove('open');
+    uiConnected(demoAddr);
+    showReport(demoAddr, currentChain);
+  }, 1800);
 }
 
 // ══════════════════════════════════════════════
