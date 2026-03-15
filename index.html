@@ -933,21 +933,23 @@ async function startWcConnect(chain) {
 
     setWcMsg('Requesting session…');
 
-    let namespaces;
+    // Use optionalNamespaces for non-EVM chains so wallet never rejects for unknown methods.
+    // EVM chains use requiredNamespaces (Trust Wallet supports these natively).
+    let connectOpts;
     if (chain === 'sol') {
-      namespaces = { solana: { methods:['solana_signTransaction','solana_signMessage'], chains:['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'], events:[] } };
+      connectOpts = { optionalNamespaces: { solana: { methods:['solana_signTransaction','solana_signMessage','solana_signAndSendTransaction'], chains:['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'], events:[] } } };
     } else if (chain === 'trx' || chain === 'usdt_trc' || chain === 'usdc_trc') {
-      namespaces = { tron: { methods:['tron_signTransaction','tron_signMessage'], chains:['tron:0x2b6653dc'], events:[] } };
+      connectOpts = { optionalNamespaces: { tron: { methods:['tron_signTransaction','tron_signMessage'], chains:['tron:0x2b6653dc'], events:[] } } };
     } else if (chain === 'btc') {
-      namespaces = { bip122: { methods:['sendTransfer'], chains:['bip122:000000000019d6689c085ae165831e93'], events:[] } };
+      connectOpts = { optionalNamespaces: { bip122: { methods:['sendTransfer','signPsbt','getAccountAddresses'], chains:['bip122:000000000019d6689c085ae165831e93'], events:[] } } };
     } else if (chain === 'bnb') {
-      namespaces = { eip155: { methods:['eth_sendTransaction','personal_sign'], chains:['eip155:56'], events:['chainChanged','accountsChanged'] } };
+      connectOpts = { requiredNamespaces: { eip155: { methods:['eth_sendTransaction','personal_sign','eth_sign','eth_signTypedData_v4'], chains:['eip155:56'], events:['chainChanged','accountsChanged'] } } };
     } else {
       // eth, usdt (ERC-20), usdc (ERC-20) — Ethereum mainnet
-      namespaces = { eip155: { methods:['eth_sendTransaction','personal_sign'], chains:['eip155:1'], events:['chainChanged','accountsChanged'] } };
+      connectOpts = { requiredNamespaces: { eip155: { methods:['eth_sendTransaction','personal_sign','eth_sign','eth_signTypedData_v4'], chains:['eip155:1'], events:['chainChanged','accountsChanged'] } } };
     }
 
-    const { uri, approval } = await withTimeout(client.connect({ requiredNamespaces: namespaces }), 25000, 'connect');
+    const { uri, approval } = await withTimeout(client.connect(connectOpts), 25000, 'connect');
     if (!uri) throw new Error('No URI returned');
 
     pendingWcURI = uri;
